@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "nuxt-ui": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://ui.nuxt.com/mcp"]
+    }
+  }
+}
