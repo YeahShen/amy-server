@@ -125,6 +125,13 @@
             <!-- 请将版本号替换为最新稳定版 -->
             <version>33.6.0-jre</version>
         </dependency>
+
+
+        <dependency>
+            <groupId>net.dreamlu</groupId>
+            <artifactId>mica-ip2region</artifactId>
+            <version>2.7.18.9</version>
+        </dependency>
     </dependencies>
 
     <build>
