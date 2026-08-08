@@ -3,7 +3,6 @@ package site.ashenstation.amyserver.service;
 import cn.hutool.core.util.IdUtil;
 import com.mybatisflex.core.util.UpdateEntity;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,15 +18,11 @@ import site.ashenstation.amyserver.mapper.UserMapper;
 import site.ashenstation.amyserver.property.LoginProperties;
 import site.ashenstation.amyserver.property.RsaProperties;
 import site.ashenstation.amyserver.property.SecurityProperties;
-import site.ashenstation.amyserver.utils.AmyConstants;
-import site.ashenstation.amyserver.utils.IpAddrUtils;
-import site.ashenstation.amyserver.utils.RsaUtils;
-import site.ashenstation.amyserver.utils.TokenProvider;
+import site.ashenstation.amyserver.utils.*;
 import site.ashenstation.amyserver.vo.AuthResVo;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +60,7 @@ public class AuthService {
         user.setPassword(null);
         LoginPlatform loginPlatform = LoginPlatform.find(request.getHeader(securityProperties.getClientHeader()));
 
-        HashMap<String, String> claims = new HashMap<>(){{
+        HashMap<String, String> claims = new HashMap<>() {{
             put(AmyConstants.JWT_CLAIM_USERNAME, dto.getUsername());
             put(AmyConstants.JWT_CLAIM_USER_ID, String.valueOf(user.getId()));
             put(AmyConstants.JWT_CLAIM_UID, IdUtil.fastSimpleUUID());
@@ -93,4 +88,34 @@ public class AuthService {
 
         return new AuthResVo(token, user);
     }
+
+    public User getInfo() {
+        JwtUserDto jwtUser = (JwtUserDto) SecurityUtils.getCurrentUser();
+        User appUser = jwtUser.getUser();
+
+        appUser.setPassword(null);
+        return appUser;
+    }
+
+    public Boolean logout(HttpServletRequest request) {
+        String token = tokenProvider.resolveToken(request);
+
+        LoginPlatform loginPlatform = LoginPlatform.find(request.getHeader(securityProperties.getClientHeader()));
+
+        onlineUserService.logout(token, loginPlatform);
+
+//        Claims claims = tokenProvider.getClaims(token);
+//        String uid = claims.get(AmyConstants.JWT_CLAIM_UID, String.class);
+//        String userId = claims.get(AmyConstants.JWT_CLAIM_USER_ID, String.class);
+
+//        try {
+//            WebSocketSession webSocketSession = WebSocketHandler.ONLINE_SESSIONS.get(userId + ":" + uid);
+//            WebSocketHandler.ONLINE_SESSIONS.remove(userId + ":" + uid);
+//            webSocketSession.close();
+//        } catch (Exception e) {
+//            log.error(e.getMessage());
+//        }
+        return true;
+    }
+
 }

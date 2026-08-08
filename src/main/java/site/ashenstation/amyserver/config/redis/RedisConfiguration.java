@@ -1,7 +1,6 @@
 package site.ashenstation.amyserver.config.redis;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.MurmurHash3;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -30,14 +29,13 @@ import java.util.Map;
 @EnableCaching
 @AutoConfigureBefore(DataRedisAutoConfiguration.class)
 public class RedisConfiguration implements CachingConfigurer {
-    private static final String[] WHITELIST_STR = {"site.ashenstation"};
 
     @Bean
     public RedisCacheConfiguration redisCacheConfiguration() {
-        FastJsonRedisSerializer<Object> fastJsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
+        JacksonRedisSerializer<Object> jacksonRedisSerializer = new JacksonRedisSerializer<>(Object.class, RedisObjectMapper.INSTANCE);
         RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig();
         configuration = configuration.serializeValuesWith(RedisSerializationContext.
-                SerializationPair.fromSerializer(fastJsonRedisSerializer)).entryTtl(Duration.ofHours(2));
+                SerializationPair.fromSerializer(jacksonRedisSerializer)).entryTtl(Duration.ofHours(2));
         return configuration;
     }
 
@@ -45,14 +43,10 @@ public class RedisConfiguration implements CachingConfigurer {
     public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();
         // 指定 key 和 value 的序列化方案
-        FastJsonRedisSerializer<Object> fastJsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
-        // value值的序列化采用fastJsonRedisSerializer
-        template.setValueSerializer(fastJsonRedisSerializer);
-        template.setHashValueSerializer(fastJsonRedisSerializer);
-        // 设置fastJson的序列化白名单
-        for (String pack : WHITELIST_STR) {
-            JSONFactory.getDefaultObjectReaderProvider().addAutoTypeAccept(pack);
-        }
+        JacksonRedisSerializer<Object> jacksonRedisSerializer = new JacksonRedisSerializer<>(Object.class, RedisObjectMapper.INSTANCE);
+        // value值的序列化采用jacksonRedisSerializer(白名单校验见 RedisObjectMapper)
+        template.setValueSerializer(jacksonRedisSerializer);
+        template.setHashValueSerializer(jacksonRedisSerializer);
         // key的序列化采用StringRedisSerializer
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
@@ -91,7 +85,12 @@ public class RedisConfiguration implements CachingConfigurer {
                 container.put(String.valueOf(i), params[i]);
             }
             // 转为JSON字符串
-            String jsonString = JSON.toJSONString(container);
+            String jsonString;
+            try {
+                jsonString = RedisObjectMapper.INSTANCE.writeValueAsString(container);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("缓存Key生成失败", e);
+            }
             // 使用 MurmurHash 生成 hash
             return Integer.toHexString(MurmurHash3.hash32x86(jsonString.getBytes()));
         };

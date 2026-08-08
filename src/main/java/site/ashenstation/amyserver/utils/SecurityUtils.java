@@ -2,9 +2,9 @@ package site.ashenstation.amyserver.utils;
 
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,12 +14,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Slf4j
 @Component
 public class SecurityUtils {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static String header;
 
@@ -52,10 +55,14 @@ public class SecurityUtils {
      */
     public static List<Long> getCurrentUserDataScope() {
         UserDetails userDetails = getCurrentUser();
-        // 将 Java 对象转换为 JSONObject 对象
-        JSONObject jsonObject = (JSONObject) JSON.toJSON(userDetails);
-        JSONArray jsonArray = jsonObject.getJSONArray("dataScopes");
-        return JSON.parseArray(jsonArray.toJSONString(), Long.class);
+        // 将 Java 对象转换为 JsonNode 对象
+        JsonNode jsonNode = OBJECT_MAPPER.convertValue(userDetails, JsonNode.class);
+        JsonNode dataScopes = jsonNode.get("dataScopes");
+        if (dataScopes == null || dataScopes.isNull()) {
+            return new ArrayList<>();
+        }
+        return OBJECT_MAPPER.convertValue(dataScopes, new TypeReference<List<Long>>() {
+        });
     }
 
     /**

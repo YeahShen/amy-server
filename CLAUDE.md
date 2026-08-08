@@ -28,9 +28,9 @@ Spring Boot 4.1 MVC application (Java 17, Maven) using MyBatis-Flex for database
 | Web framework | Spring Boot MVC (Tomcat) |
 | ORM | MyBatis-Flex 1.11.8 (annotation-driven, `BaseMapper`-based) |
 | Database | MariaDB |
-| Cache | Redis (FastJSON2 serializer, 2-hour default TTL) |
+| Cache | Redis (Jackson serializer, 2-hour default TTL) |
 | Auth | Spring Security + JWT (planned, not yet implemented) |
-| JSON | FastJSON2 (with Spring HTTP message converter extension) |
+| JSON | Jackson (Spring Boot 自带) |
 | Utilities | Hutool 5.8, Guava 33, Commons Codec |
 
 ### Package layout
@@ -40,7 +40,7 @@ site.ashenstation.amyserver
 ├── AppRun.java              # Entry point, enables @MapperScan
 ├── config/
 │   ├── security/            # SpringSecurityConfig (stub)
-│   └── redis/               # RedisConfiguration, FastJsonRedisSerializer
+│   └── redis/               # RedisConfiguration, JacksonRedisSerializer, RedisObjectMapper
 ├── controller/              # IndexController (stub)
 ├── dto/                     # JwtUserDto (implements UserDetails)
 ├── entity/                  # User entity → sys_user table
@@ -69,7 +69,7 @@ MyBatis-Flex provides `BaseMapper<T>` — entities map to tables via `@Table` an
 
 ### Redis / caching
 
-`RedisUtils` is the primary Redis access point — injected as a Spring `@Component`, it wraps `RedisTemplate` with typed get/set, hash, list, set operations, key scanning, and retry logic (3 attempts on `set`). The custom `FastJsonRedisSerializer` handles all value serialization; deserialization auto-detects types via FastJSON's `@type` metadata in serialized payloads. A whitelist limits auto-type deserialization to `site.ashenstation` package.
+`RedisUtils` is the primary Redis access point — injected as a Spring `@Component`, it wraps `RedisTemplate` with typed get/set, hash, list, set operations, key scanning, and retry logic (3 attempts on `set`). The custom `JacksonRedisSerializer` handles all value serialization; deserialization auto-detects types via Jackson's `@class` metadata in serialized payloads. A whitelist (`BasicPolymorphicTypeValidator`, see `RedisObjectMapper`) limits polymorphic deserialization to `java.util`, `java.time` and `site.ashenstation` packages. `RedisObjectMapper` is a static holder — do NOT register it as a Spring bean, or Spring MVC's HTTP message converter would pick it up and leak `@class` fields into responses.
 
 Spring's `@Cacheable` annotations are wired through `RedisCacheManager` with FastJSON serialization and a custom `KeyGenerator` that hashes (class, method, package, params) with MurmurHash3.
 

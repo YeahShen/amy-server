@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <!-- maven-compiler-plugin 3.15+ 默认不启用 classpath 注解处理,需显式开启否则 Lombok 不生效 -->
+        <maven.compiler.proc>full</maven.compiler.proc>
     </properties>
     <dependencies>
         <dependency>
@@ -99,24 +101,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-            <version>2.0.48</version>
-        </dependency>
-
         <!-- Source: https://mvnrepository.com/artifact/commons-codec/commons-codec -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.21.0</version>
             <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2-extension-spring5</artifactId>
-            <version>2.0.54</version>
         </dependency>
 
         <dependency>

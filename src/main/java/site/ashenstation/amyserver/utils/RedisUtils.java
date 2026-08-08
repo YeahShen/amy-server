@@ -1,7 +1,7 @@
 package site.ashenstation.amyserver.utils;
 
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson2.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +10,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
+import site.ashenstation.amyserver.config.redis.RedisObjectMapper;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -219,11 +220,18 @@ public class RedisUtils {
         }
         // 如果 value 不是目标类型，则尝试将其反序列化为 clazz 类型
         if (!clazz.isInstance(value)) {
-            return JSON.parseObject(value.toString(), clazz);
-        } else if (clazz.isInstance(value)) {
-            return clazz.cast(value);
+            try {
+                if (value instanceof String str) {
+                    // 字符串按 JSON 文本解析
+                    return RedisObjectMapper.INSTANCE.readValue(str, clazz);
+                }
+                // Map 等其他类型直接转换
+                return RedisObjectMapper.INSTANCE.convertValue(value, clazz);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("缓存反序列化失败: " + e.getMessage(), e);
+            }
         } else {
-            return null;
+            return clazz.cast(value);
         }
     }
 
