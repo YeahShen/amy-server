@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import site.ashenstation.amyserver.annotation.rest.AnonymousPostMapping;
 import site.ashenstation.amyserver.dto.AuthByUsernamePasswordDto;
 import site.ashenstation.amyserver.service.AuthService;
+import site.ashenstation.amyserver.vo.AuthResVo;
 
 import java.util.Map;
 
@@ -21,8 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @AnonymousPostMapping("login-by-username-password")
-    private ResponseEntity<Map<String, Object>> loginByUsernamePassword(@RequestBody @Valid AuthByUsernamePasswordDto dto, HttpServletRequest request) {
-        System.out.println(dto);
+    private ResponseEntity<AuthResVo> loginByUsernamePassword(@RequestBody @Valid AuthByUsernamePasswordDto dto, HttpServletRequest request) {
         return ResponseEntity.ok(authService.loginByUsernamePassword(dto, request));
     }
 }

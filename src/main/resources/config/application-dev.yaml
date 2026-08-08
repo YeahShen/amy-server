@@ -5,6 +5,25 @@ spring:
     username: amy_dev
     password: Mi3Msda457AmSp2w
 
+  data:
+    redis:
+      host: 47.112.7.167
+      port: 6379
+      timeout: 5000ms
+      database: 0
+      password: redis_Sx5DsW
+      lettuce:
+        pool:
+          # 最大连接数（默认8）
+          max-active: 8
+          # 最大空闲连接（默认8）
+          max-idle: 8
+          # 最小空闲连接（默认0）
+          min-idle: 2
+          # 最大等待时间（获取连接时的最长等待时间，单位毫秒，-1表示无限制）
+          max-wait: 1000ms
+
+
 jwt:
   # 必须使用最少88位的Base64对该令牌进行编码
   base64-secret: ZmQ0ZGI5NjQ0MDQwY2I4MjMxY2Y3ZmI3MjdhN2ZmMjNhODViOTg1ZGE0NTBjMGM4NDA5NzYxMjdjOWMwYWRmZTBlZjlhNGY3ZTg4Y2U3YTE1ODVkZDU5Y2Y3OGYwZWE1NzUzNWQ2YjFjZDc0NGMxZWU2MmQ3MjY1NzJmNTE0MzI=

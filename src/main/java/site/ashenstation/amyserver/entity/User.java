@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @ToString
@@ -22,7 +23,8 @@ public class User {
     private Boolean accountNonExpired;
     private Boolean accountNonLocked;
     private Boolean credentialsNonExpired;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
-    private LocalDateTime lastLoginTime;
+    private Date createTime;
+    private Date updateTime;
+    private Date lastLoginTime;
+    private String lastLoginIp;
 }
