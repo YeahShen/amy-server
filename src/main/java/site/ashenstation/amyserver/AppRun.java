@@ -6,6 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import site.ashenstation.amyserver.utils.SpringBeanHolder;
 
 @SpringBootApplication
 @MapperScan("site.ashenstation.amyserver.mapper")
@@ -22,4 +24,8 @@ public class AppRun {
         log.info("---------------------------------------------");
     }
 
+    @Bean
+    public SpringBeanHolder springContextHolder() {
+        return new SpringBeanHolder();
+    }
 }
