@@ -2,7 +2,10 @@ package site.ashenstation.amyserver.utils;
 
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +19,7 @@ import org.springframework.util.StringUtils;
 import site.ashenstation.amyserver.enums.LoginPlatform;
 import site.ashenstation.amyserver.property.SecurityProperties;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +38,12 @@ public class TokenProvider implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         byte[] keyBytes = Decoders.BASE64.decode(securityProperties.getBase64Secret());
-        Key key = Keys.hmacShaKeyFor(keyBytes);
-        jwtParser = Jwts.parserBuilder()
-                .setSigningKey(key)
+        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+        jwtParser = Jwts.parser()
+                .verifyWith(key)
                 .build();
         jwtBuilder = Jwts.builder()
-                .signWith(key, SignatureAlgorithm.HS512);
+                .signWith(key, Jwts.SIG.HS512);
 
         log.info("TokenProvider initialized");
     }
@@ -51,8 +54,8 @@ public class TokenProvider implements InitializingBean {
      */
     public String createToken(String subject, Map<String, String> claims) {
         return jwtBuilder
-                .setClaims(claims)
-                .setSubject(subject)
+                .claims(claims)
+                .subject(subject)
                 .compact();
     }
 
@@ -66,17 +69,17 @@ public class TokenProvider implements InitializingBean {
      */
     public String createToken(String subject, Map<String, String> claims, Long expired) {
         return jwtBuilder
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expired))
+                .claims(claims)
+                .subject(subject)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expired))
                 .compact();
     }
 
     public Claims getClaims(String token) {
         return jwtParser
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     /**

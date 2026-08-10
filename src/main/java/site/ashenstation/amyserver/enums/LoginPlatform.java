@@ -19,6 +19,6 @@ public enum LoginPlatform {
                 return value;
             }
         }
-        return null;
+        return LoginPlatform.CLIENT;
     }
 }
