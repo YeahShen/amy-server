@@ -31,3 +31,7 @@ jwt:
 
 login:
   single-login: true
+
+static-resource-directory-properties:
+  user-avatar-directory: /amy/user-avatar
+  user-avatar-path-prefix: /resource/user-avatar

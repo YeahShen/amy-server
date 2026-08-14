@@ -9,6 +9,9 @@ services:
       - "5006:5006"
     restart: unless-stopped
 
+    volumes:
+      - /volume2/.amy-station/user-avatar:/amy/user-avatar
+
     environment:
       - DATASOURCE_HOST=192.168.31.114
       - DATASOURCE_PORT=3306

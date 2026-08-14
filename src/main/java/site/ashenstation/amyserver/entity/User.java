@@ -6,7 +6,6 @@ import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -19,6 +18,7 @@ public class User {
     private String password;
     private String email;
     private String phone;
+    private String avatar;
     private Boolean enabled;
     private Boolean accountNonExpired;
     private Boolean accountNonLocked;
