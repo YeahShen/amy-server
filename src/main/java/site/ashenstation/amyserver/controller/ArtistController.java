@@ -2,14 +2,13 @@ package site.ashenstation.amyserver.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import site.ashenstation.amyserver.annotation.rest.AnonymousGetMapping;
 import site.ashenstation.amyserver.dto.ArtistDto;
 import site.ashenstation.amyserver.entity.Artist;
 import site.ashenstation.amyserver.entity.ArtistCategory;
 import site.ashenstation.amyserver.service.ArtistService;
+import site.ashenstation.amyserver.vo.ArtistByCategoryVo;
 
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class ArtistController {
      * 请求体为 multipart 表单：name、description、avatarFile、category.id / category.title
      * 写操作需登录后携带 JWT 访问
      */
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/add")
     public ResponseEntity<Boolean> createArtist(@Valid ArtistDto dto) {
         return ResponseEntity.ok(artistService.createArtist(dto));
     }
@@ -33,7 +32,7 @@ public class ArtistController {
     /**
      * 根据 ID 查询艺术家详情
      */
-    @AnonymousGetMapping("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Artist> getArtistById(@PathVariable Integer id) {
         return ResponseEntity.ok(artistService.getArtistById(id));
     }
@@ -41,8 +40,8 @@ public class ArtistController {
     /**
      * 查询艺术家列表
      */
-    @AnonymousGetMapping("/list")
-    public ResponseEntity<List<Artist>> getArtistList() {
+    @GetMapping("/list")
+    public ResponseEntity<List<ArtistByCategoryVo>> getArtistList() {
         return ResponseEntity.ok(artistService.getArtistList());
     }
 

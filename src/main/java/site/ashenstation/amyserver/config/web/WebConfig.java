@@ -33,8 +33,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String userAvatarUtl = "file:" + staticResourceDirectoryProperties.getUserAvatarDirectory().replace("\\", "/") + "/";
+        String artistAvatarUtl = "file:" + staticResourceDirectoryProperties.getArtistAvatarDirectory().replace("\\", "/") + "/";
 
         registry.addResourceHandler(staticResourceDirectoryProperties.getUserAvatarPathPrefix() + "/**").addResourceLocations(userAvatarUtl);
+        registry.addResourceHandler(staticResourceDirectoryProperties.getArtistAvatarPathPrefix() + "/**").addResourceLocations(artistAvatarUtl);
     }
 
 }

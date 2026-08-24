@@ -2,6 +2,7 @@ package site.ashenstation.amyserver.service;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
+import com.mybatisflex.core.query.QueryChain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,10 +10,12 @@ import site.ashenstation.amyserver.config.exception.BadRequestException;
 import site.ashenstation.amyserver.dto.ArtistDto;
 import site.ashenstation.amyserver.entity.Artist;
 import site.ashenstation.amyserver.entity.ArtistCategory;
+import site.ashenstation.amyserver.entity.table.ArtistCategoryTableDef;
 import site.ashenstation.amyserver.entity.table.ArtistTableDef;
 import site.ashenstation.amyserver.mapper.ArtistCategoryMapper;
 import site.ashenstation.amyserver.mapper.ArtistMapper;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
+import site.ashenstation.amyserver.vo.ArtistByCategoryVo;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,14 +89,20 @@ public class ArtistService {
     }
 
 
-    public List<Artist> getArtistList() {
-        List<Artist> artists = artistMapper.selectAll();
-        assert artists != null;
-        artists.forEach(artist -> {
-            artist.setAvatar(staticResourceDirectoryProperties.getArtistAvatarPathPrefix() + "/" + artist.getAvatar());
+    public List<ArtistByCategoryVo> getArtistList() {
+
+        List<ArtistByCategoryVo> artistByCategoryVos = QueryChain.of(artistMapper)
+                .select(ArtistCategoryTableDef.ARTIST_CATEGORY.ALL_COLUMNS, ArtistTableDef.ARTIST.ALL_COLUMNS)
+                .from(ArtistCategoryTableDef.ARTIST_CATEGORY)
+                .leftJoin(ArtistTableDef.ARTIST).on(ArtistTableDef.ARTIST.CATEGORY_ID.eq(ArtistCategoryTableDef.ARTIST_CATEGORY.ID))
+                .listAs(ArtistByCategoryVo.class);
+
+        artistByCategoryVos.forEach(artist -> {
+            artist.processAvatarUrl(staticResourceDirectoryProperties.getArtistAvatarPathPrefix());
         });
 
-        return artists;
+
+        return artistByCategoryVos;
     }
 
     public List<ArtistCategory> getArtistCategoryList() {

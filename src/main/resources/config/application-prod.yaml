@@ -35,3 +35,5 @@ login:
 static-resource-directory-properties:
   user-avatar-directory: /amy/user-avatar
   user-avatar-path-prefix: /resource/user-avatar
+  artist-avatar-directory: /amy/artist-avatar
+  artist-avatar-path-prefix: /resource/artist-avatar

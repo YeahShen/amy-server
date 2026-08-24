@@ -6,7 +6,7 @@ USER root
 COPY target/*.jar /app.jar
 
 RUN mkdir /amy
-RUN mkdir /amy/poster /amy/avatar /amy/archive /amy/video_1 /amy/public /amy/user-avatar
+RUN mkdir /amy/poster /amy/artist-avatar /amy/archive /amy/video_1 /amy/public /amy/user-avatar
 
 ENV TZ=Asia/Shanghai
 
