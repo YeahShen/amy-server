@@ -18,6 +18,7 @@ import site.ashenstation.amyserver.mapper.UserMapper;
 import site.ashenstation.amyserver.property.LoginProperties;
 import site.ashenstation.amyserver.property.RsaProperties;
 import site.ashenstation.amyserver.property.SecurityProperties;
+import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
 import site.ashenstation.amyserver.utils.*;
 import site.ashenstation.amyserver.vo.AuthResVo;
 
@@ -33,6 +34,7 @@ public class AuthService {
     private final UserMapper userMapper;
     private final OnlineUserService onlineUserService;
     private final LoginProperties loginProperties;
+    private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
 
     public AuthResVo loginByUsernamePassword(AuthByUsernamePasswordDto dto, HttpServletRequest request) {
 
@@ -56,6 +58,8 @@ public class AuthService {
 
         assert jwtUserDto != null;
         User user = jwtUserDto.getUser();
+
+        user.setAvatar(staticResourceDirectoryProperties.getUserAvatarPathPrefix() + "/" + user.getAvatar());
 
         user.setPassword(null);
         LoginPlatform loginPlatform = LoginPlatform.find(request.getHeader(securityProperties.getClientHeader()));

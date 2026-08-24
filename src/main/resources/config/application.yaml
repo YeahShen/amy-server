@@ -3,7 +3,7 @@ spring:
     name: amy-server
 
 server:
-  port: 8080
+  port: 9999
 
 
 jwt:

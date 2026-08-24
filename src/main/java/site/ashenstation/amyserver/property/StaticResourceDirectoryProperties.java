@@ -9,5 +9,8 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "static-resource-directory-properties")
 public class StaticResourceDirectoryProperties {
     private String userAvatarDirectory;
+    private String artistAvatarDirectory;
+
     private String userAvatarPathPrefix;
+    private String artistAvatarPathPrefix;
 }

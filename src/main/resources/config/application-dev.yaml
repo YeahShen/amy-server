@@ -37,3 +37,5 @@ jwt:
 static-resource-directory-properties:
   user-avatar-directory: C:\Users\ayuan\Documents\AMY\static\user-avatar
   user-avatar-path-prefix: /resource/user-avatar
+  artist-avatar-directory: C:\Users\ayuan\Documents\AMY\static\user-avatar
+  artist-avatar-path-prefix: /resource/artist/avatar
