@@ -7,9 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import site.ashenstation.amyserver.utils.SpringBeanHolder;
 
 @SpringBootApplication
+@EnableScheduling
 @MapperScan("site.ashenstation.amyserver.mapper")
 @Slf4j
 public class AppRun {
