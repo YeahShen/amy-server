@@ -52,4 +52,9 @@ public class ArtistController {
     public ResponseEntity<List<ArtistCategory>> getArtistCategoryList() {
         return ResponseEntity.ok(artistService.getArtistCategoryList());
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Artist>> getAllArtists() {
+        return ResponseEntity.ok(artistService.getAllArtists());
+    }
 }

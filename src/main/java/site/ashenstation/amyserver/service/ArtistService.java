@@ -108,4 +108,14 @@ public class ArtistService {
     public List<ArtistCategory> getArtistCategoryList() {
         return artistCategoryMapper.selectAll();
     }
+
+    public List<Artist> getAllArtists() {
+        List<Artist> artists = artistMapper.selectAll();
+
+        assert artists != null;
+        artists.forEach(artist -> {
+            artist.setAvatar(staticResourceDirectoryProperties.getArtistAvatarPathPrefix() + "/" + artist.getAvatar());
+        });
+        return artists;
+    }
 }
