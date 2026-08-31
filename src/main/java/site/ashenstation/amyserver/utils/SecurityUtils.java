@@ -74,6 +74,12 @@ public class SecurityUtils {
         return getCurrentUserId(getToken());
     }
 
+    public static String getTokenUid() {
+        String token = getToken();
+        JWT jwt = JWTUtil.parseToken(token);
+        return jwt.getPayload(AmyConstants.JWT_CLAIM_UID).toString();
+    }
+
     /**
      * 获取用户ID
      *

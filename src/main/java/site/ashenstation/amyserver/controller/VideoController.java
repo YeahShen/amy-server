@@ -3,8 +3,10 @@ package site.ashenstation.amyserver.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import site.ashenstation.amyserver.dto.CreateVideoDto;
 import site.ashenstation.amyserver.entity.VideoPublisher;
 import site.ashenstation.amyserver.entity.VideoTag;
 import site.ashenstation.amyserver.entity.VideoType;
@@ -34,5 +36,10 @@ public class VideoController {
     @GetMapping("get-publisher")
     public ResponseEntity<List<VideoPublisher>> getAllVideoPublishers() {
         return ResponseEntity.ok(videoService.GetVideoPublisher());
+    }
+
+    @PostMapping("createUploadTask")
+    public ResponseEntity<String> createVideoUploadTask(CreateVideoDto dto) {
+        return ResponseEntity.ok(videoService.createVideoUploadTask(dto));
     }
 }

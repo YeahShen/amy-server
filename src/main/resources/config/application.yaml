@@ -1,6 +1,10 @@
 spring:
   application:
     name: amy-server
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
 
 server:
   port: 9999

@@ -39,3 +39,14 @@ static-resource-directory-properties:
   user-avatar-path-prefix: /resource/user-avatar
   artist-avatar-directory: C:\Users\ayuan\Documents\AMY\static\artist-avatar
   artist-avatar-path-prefix: /resource/artist-avatar
+  video-roots:
+    - { name: 'no.1', path: C:\Users\ayuan\Documents\AMY\static\video }
+  enable-video-root: 'no.1'
+  video-resource-prefix: /resource/video
+  upload-temp-directory: C:\Users\ayuan\Documents\AMY\static\temp
+  poster-directory: C:\Users\ayuan\Documents\AMY\static\poster
+  poster-path-prefix: /resource/poster
+  
+ffmpeg:
+  ffmpeg-executor-path: D:\workspace\resource\ffmpeg-n8.0-latest-win64-gpl-8.0\bin\ffmpeg.exe
+  ffprobe-executor-path: D:\workspace\resource\ffmpeg-n8.0-latest-win64-gpl-8.0\bin\ffprobe.exe

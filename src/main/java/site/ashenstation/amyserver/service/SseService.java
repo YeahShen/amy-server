@@ -3,30 +3,46 @@ package site.ashenstation.amyserver.service;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import site.ashenstation.amyserver.dto.SseMessageDto;
+import site.ashenstation.amyserver.utils.SecurityUtils;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class SseService {
-    private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+    public static final Map<String, SseEmitter> ONLINE_SESSIONS = new ConcurrentHashMap<>();
 
     public SseEmitter createEmitter() {
         // 0L 表示永不超时，也可以设置具体的毫秒值
         SseEmitter emitter = new SseEmitter(0L);
 
-        // 连接完成、超时或出错时，自动从列表中移除
-        emitter.onCompletion(() -> emitters.remove(emitter));
-        emitter.onTimeout(() -> emitters.remove(emitter));
-        emitter.onError((e) -> emitters.remove(emitter));
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        String tokenUid = SecurityUtils.getTokenUid();
 
-        emitters.add(emitter);
+
+        // 连接完成、超时或出错时，自动从列表中移除
+        emitter.onCompletion(() -> {
+            ONLINE_SESSIONS.remove(currentUserId + ":" + tokenUid);
+        });
+        emitter.onTimeout(() -> {
+            ONLINE_SESSIONS.remove(currentUserId + ":" + tokenUid);
+        });
+        emitter.onError((e) -> {
+            ONLINE_SESSIONS.remove(currentUserId + ":" + tokenUid);
+        });
+
+
+        ONLINE_SESSIONS.put(currentUserId + ":" + tokenUid, emitter);
+
         return emitter;
     }
 
     public void sendToAll(Object message) {
-        for (SseEmitter emitter : emitters) {
+        ONLINE_SESSIONS.entrySet().stream().forEach(entry -> {
+            SseEmitter emitter = entry.getValue();
+
             try {
                 // 构建并发送事件，可以设置id、事件名等
                 emitter.send(SseEmitter.event()
@@ -34,8 +50,21 @@ public class SseService {
                         .name("message")
                         .data(message));
             } catch (IOException e) {
-                emitters.remove(emitter);
+                ONLINE_SESSIONS.remove(entry.getKey());
             }
+        });
+    }
+
+    public void SendMessage(String id, SseMessageDto message) {
+        SseEmitter emitter = ONLINE_SESSIONS.get(id);
+        try {
+            // 构建并发送事件，可以设置id、事件名等
+            emitter.send(SseEmitter.event()
+                    .id(String.valueOf(System.currentTimeMillis()))
+                    .name("message")
+                    .data(message));
+        } catch (IOException e) {
+            ONLINE_SESSIONS.remove(id);
         }
     }
 
@@ -46,12 +75,15 @@ public class SseService {
      */
     @Scheduled(fixedRate = 15_000)
     public void heartbeat() {
-        for (SseEmitter emitter : emitters) {
+        ONLINE_SESSIONS.entrySet().stream().forEach(entry -> {
+            SseEmitter emitter = entry.getValue();
+
             try {
+                // 构建并发送事件，可以设置id、事件名等
                 emitter.send(SseEmitter.event().comment("ping"));
             } catch (IOException e) {
-                emitters.remove(emitter);
+                ONLINE_SESSIONS.remove(entry.getKey());
             }
-        }
+        });
     }
 }
