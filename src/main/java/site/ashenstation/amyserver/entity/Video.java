@@ -17,13 +17,14 @@ public class Video {
     private String title;
     private String description;
     private String serialNumber;
-    private String type;
+    private Integer type;
     private String posterName;
     private Integer publisherId;
     private Integer seriesId;
     private Long duration;
     private String filePath;
     private String fileName;
+    private String parentFolderName;
     private Date createdAt;
     private Integer creator;
 }

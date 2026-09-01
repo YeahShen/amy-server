@@ -37,3 +37,14 @@ static-resource-directory-properties:
   user-avatar-path-prefix: /resource/user-avatar
   artist-avatar-directory: /amy/artist-avatar
   artist-avatar-path-prefix: /resource/artist-avatar
+  video-roots:
+    - { name: 'no.1', path: /amy/video_1 }
+  enable-video-root: 'no.1'
+  video-resource-prefix: /resource/video
+  upload-temp-directory: /amy/temp
+  poster-path-prefix: /resource/poster
+  poster-directory: /amy/poster
+
+ffmpeg:
+  ffprobe-executor-path: ffprobe
+  ffmpeg-executor-path: ffmpeg

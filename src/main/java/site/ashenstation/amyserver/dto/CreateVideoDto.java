@@ -24,4 +24,5 @@ public class CreateVideoDto {
     private List<Artist> artist;
     private VideoPublisher publisher;
     private List<VideoTag> tag;
+    private Integer creatorId;
 }
