@@ -6,11 +6,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import site.ashenstation.amyserver.annotation.UploadProcess;
 import site.ashenstation.amyserver.dto.UploadChunkDto;
 import site.ashenstation.amyserver.service.UploadService;
+import site.ashenstation.amyserver.utils.SecurityUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -32,8 +35,16 @@ public class UploadController {
     }
 
 
+    @UploadProcess
     @GetMapping("next-step")
-    public void nextStep(String id) {
-        uploadService.nextStep(id);
+    public Map<String, String> nextStep(String id) {
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        String tokenUid = SecurityUtils.getTokenUid();
+
+        return new HashMap<>() {{
+            put("taskId", id);
+            put("currentUserId", currentUserId);
+            put("tokenUid", tokenUid);
+        }};
     }
 }

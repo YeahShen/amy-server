@@ -8,8 +8,8 @@ import java.util.concurrent.Executor;
 
 @Configuration
 public class AsyncConfig {
-    
-    @Bean(name = "customTaskExecutor")
+
+    @Bean(name = "AmyTaskExecutor")
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5); // 核心线程数
