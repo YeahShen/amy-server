@@ -2,6 +2,7 @@ package site.ashenstation.amyserver.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import site.ashenstation.amyserver.annotation.UploadProcess;
 import site.ashenstation.amyserver.config.exception.BadRequestException;
 import site.ashenstation.amyserver.dto.UploadChunkDto;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
@@ -38,11 +39,13 @@ public class UploadService {
         }};
     }
 
-    public void nextStep(String id) {
+    @UploadProcess
+    public String nextStep(String id) {
         String currentUserId = SecurityUtils.getCurrentUserId();
         String tokenUid = SecurityUtils.getTokenUid();
 
+        return id;
         // 委托给独立的 @Async bean 调用，经 Spring 代理后异步执行
-        uploadProcessService.nextStepDeal(id, currentUserId + ":" + tokenUid);
+//        uploadProcessService.nextStepDeal(id, currentUserId + ":" + tokenUid);
     }
 }
