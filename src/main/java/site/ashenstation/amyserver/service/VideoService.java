@@ -3,8 +3,8 @@ package site.ashenstation.amyserver.service;
 import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import site.ashenstation.amyserver.config.exception.BadRequestException;
 import site.ashenstation.amyserver.dto.CreateVideoDto;
@@ -28,9 +28,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VideoService {
 
     private final VideoTypeMapper videoTypeMapper;
@@ -146,9 +148,15 @@ public class VideoService {
             FileUtil.mergeFileChunk(destFile, chunks);
 
             Long duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
+            final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
 
             Video video = saveVideoInformation(data, duration, destFile);
 
+            File mp4File;
+            if (!ext.equals(".mp4")) {
+                mp4File = new File(destRootFile, fileMainName + ".mp4");
+                fFmpegUtils.conversion(destFile, mp4File, FFMpegUtils.CONVERSION_TO_MP4_ARGS);
+            }
 
 
         } catch (Exception e) {

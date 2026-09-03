@@ -6,11 +6,13 @@ import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import site.ashenstation.amyserver.property.FFmpegProperties;
 
+import java.io.File;
 import java.io.IOException;
 
 @Component
@@ -20,6 +22,14 @@ public class FFMpegUtils implements InitializingBean {
     private FFmpeg ffmpeg;
     private FFprobe ffprobe;
     private FFmpegExecutor executor;
+
+    public static final String CONVERSION_TO_MP4_ARGS = "-c:v libx264 -preset medium -crf 10 -c:a aac -b:a 320k";
+    public static final String CONVERSION_TO_TS_ARGS = "-y -vcodec copy -acodec copy";
+    public static final String CONVERSION_TO_M3U8_4K_ARGS = "-y -vf scale=3840:2160:force_original_aspect_ratio=decrease,pad=3840:2160:(ow-iw)/2:(oh-ih)/2 -c:v libx264 -b:v 15000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts";
+    public static final String CONVERSION_TO_M3U8_2K_ARGS = "-y -vf scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2 -c:v libx264 -b:v 8000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts";
+    public static final String CONVERSION_TO_M3U8_1080P_ARGS = "-y -vf scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2 -c:v libx264 -b:v 5000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts";
+    public static final String CONVERSION_TO_M3U8_720P_ARGS = "-y -vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 -c:v libx264 -b:v 2500k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts";
+    public static final String CONVERSION_TO_M3U8_480P_ARGS = "-y -vf scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2 -c:v libx264 -b:v 1200k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts";
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -35,39 +45,26 @@ public class FFMpegUtils implements InitializingBean {
         return Math.round(probe.getFormat().duration);
     }
 
-    public void conversionToMP4(String source, String target, ProgressListener progressListener) {
-        FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(source)
-                .addOutput(target)
-                .addExtraArgs("-c:v", "libx264", "-b:v", "2M", "-preset", "medium", "-crf", "18", "-c:a", "aac", "-b:a", "320k")
-                .done();
-
-        executor.createJob(builder, progressListener).run();
+    public void conversion(File source, File target, String args) {
+        this.conversion(source, target, args, new ProgressListener() {
+            @Override
+            public void progress(Progress progress) {
+            }
+        });
     }
 
-    public void conversionToTs(String source, String target, ProgressListener progressListener) {
-        FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(source)
-                .addOutput(target)
-                .addExtraArgs("-y", "-vcodec", "copy", "-acodec", "copy")
-                .done();
+    public void conversion(File source, File target, String args, ProgressListener progressListener) {
 
-        executor.createJob(builder, progressListener).run();
-    }
+        FFmpegBuilder builder = new FFmpegBuilder();
+        builder.setInput(source);
+        builder.addOutput(target);
 
-    public void conversionToM38u(String source, String target, ProgressListener progressListener) {
-        FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(source)
-                .overrideOutputFiles(true)
-                .addOutput(target)
-                .setFormat("hls")
-                .addExtraArgs("-c", "copy")
-                .addExtraArgs("-map", "0")
-                .addExtraArgs("-hls_time", "10") // 每个TS切片的目标时长（单位：秒），例如10秒
-                .addExtraArgs("-hls_list_size", "0")
-                .addExtraArgs("-hls_segment_filename", target.replace(".m3u8", "_%03d.ts"))
-                .done();
+        String[] argsSplit = args.split(" ");
 
-        executor.createJob(builder, progressListener).run();
+        for (String arg : argsSplit) {
+            builder.addExtraArgs(arg);
+        }
+ 
+        this.executor.createJob(builder, progressListener);
     }
 }

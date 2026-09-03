@@ -108,40 +108,40 @@ public class UploadProcessService {
         Long duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
         final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
 
-        if (!ext.equalsIgnoreCase(".mp4")) {
-            tempFile = new File(destFileRoot, mainName + ".mp4");
-            fFmpegUtils.conversionToMP4(destFile.getAbsolutePath(), tempFile.getAbsolutePath(), progress -> {
-                double percentage = progress.out_time_ns / duration_ns;
-                sendProgress(emitterId, id, "transcoding", percentage);
-            });
-
-        }
-
-        File tsFile = new File(destFileRoot, mainName + ".ts");
-        fFmpegUtils.conversionToTs(tempFile.getAbsolutePath(), tsFile.getAbsolutePath(), progress -> {
-            double percentage = progress.out_time_ns / duration_ns;
-            sendProgress(emitterId, id, "conversion", percentage);
-        });
-
-
-        File m3u8File = new File(destFileRoot, mainName + ".m3u8");
-        fFmpegUtils.conversionToM38u(tsFile.getAbsolutePath(), m3u8File.getAbsolutePath(), progress -> {
-            double percentage = progress.out_time_ns / duration_ns;
-            sendProgress(emitterId, id, "conversion", percentage);
-        });
-
-        FileUtil.del(tsFile);
-        FileUtil.del(destFile);
-        if (FileUtil.exist(tempFile)) {
-            FileUtil.del(tempFile);
-        }
-        // 合并成功后再清理临时目录（失败时保留现场便于排查）
-        FileUtil.del(uploadDir.toFile());
-
-
-        // TODO 后续：等 Video 实体就绪后，把视频记录落库（标题/描述/演员/类型/标签等）
-//        videoService.createVideo(data, duration, m3u8File);
-        sendProgress(emitterId, id, "finish", 100);
+//        if (!ext.equalsIgnoreCase(".mp4")) {
+//            tempFile = new File(destFileRoot, mainName + ".mp4");
+//            fFmpegUtils.conversionToMP4(destFile.getAbsolutePath(), tempFile.getAbsolutePath(), progress -> {
+//                double percentage = progress.out_time_ns / duration_ns;
+//                sendProgress(emitterId, id, "transcoding", percentage);
+//            });
+//
+//        }
+//
+//        File tsFile = new File(destFileRoot, mainName + ".ts");
+//        fFmpegUtils.conversionToTs(tempFile.getAbsolutePath(), tsFile.getAbsolutePath(), progress -> {
+//            double percentage = progress.out_time_ns / duration_ns;
+//            sendProgress(emitterId, id, "conversion", percentage);
+//        });
+//
+//
+//        File m3u8File = new File(destFileRoot, mainName + ".m3u8");
+//        fFmpegUtils.conversionToM38u(tsFile.getAbsolutePath(), m3u8File.getAbsolutePath(), progress -> {
+//            double percentage = progress.out_time_ns / duration_ns;
+//            sendProgress(emitterId, id, "conversion", percentage);
+//        });
+//
+//        FileUtil.del(tsFile);
+//        FileUtil.del(destFile);
+//        if (FileUtil.exist(tempFile)) {
+//            FileUtil.del(tempFile);
+//        }
+//        // 合并成功后再清理临时目录（失败时保留现场便于排查）
+//        FileUtil.del(uploadDir.toFile());
+//
+//
+//        // TODO 后续：等 Video 实体就绪后，把视频记录落库（标题/描述/演员/类型/标签等）
+////        videoService.createVideo(data, duration, m3u8File);
+//        sendProgress(emitterId, id, "finish", 100);
     }
 
     /**
