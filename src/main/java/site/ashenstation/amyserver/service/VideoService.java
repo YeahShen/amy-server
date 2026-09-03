@@ -110,53 +110,6 @@ public class VideoService {
         return id;
     }
 
-    @Transactional
-    public void createVideo(CreateVideoDto dto, Long duration, File videoFile) {
-
-        List<VideoTag> tag = dto.getTag();
-        VideoPublisher publisher = dto.getPublisher();
-        List<Artist> artist = dto.getArtist();
-
-
-        Video video = new Video();
-        video.setTitle(dto.getTitle());
-        video.setDescription(dto.getDescription());
-        video.setSerialNumber(dto.getSerialNumber());
-        video.setType(dto.getType().getId());
-        video.setPosterName(dto.getPosterName());
-        video.setPublisherId(publisher.getId());
-
-//        合集
-//        video.setSeriesId(publisher.getId());
-        video.setDuration(duration);
-        video.setFileName(videoFile.getName());
-        video.setFilePath(videoFile.getAbsolutePath());
-        video.setParentFolderName(videoFile.getParent());
-        video.setCreatedAt(new Date());
-        video.setCreator(dto.getCreatorId());
-
-        videoMapper.insert(video);
-
-        ArrayList<VideoTagMap> videoTagMaps = new ArrayList<>();
-        tag.forEach(videoTag -> {
-            VideoTagMap videoTagMap = new VideoTagMap();
-            videoTagMap.setVideoId(video.getId());
-            videoTagMap.setTagId(videoTag.getId());
-            videoTagMaps.add(videoTagMap);
-        });
-
-        ArrayList<VideoArtistMap> videoArtistMaps = new ArrayList<>();
-        artist.forEach(videoArtist -> {
-            VideoArtistMap videoArtistMap = new VideoArtistMap();
-            videoArtistMap.setArtistId(videoArtist.getId());
-            videoArtistMap.setVideoId(video.getId());
-            videoArtistMaps.add(videoArtistMap);
-        });
-
-        videoTagMapMapper.insertBatch(videoTagMaps);
-        videoArtistMapMapper.insertBatch(videoArtistMaps);
-    }
-
 
     public void processVideoUploadNext(UploadProcessorKeyDto uploadProcessorKeyDto, CreateVideoDto data) {
         try {
@@ -194,6 +147,9 @@ public class VideoService {
 
             Long duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
 
+            Video video = saveVideoInformation(data, duration, destFile);
+
+
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -201,8 +157,51 @@ public class VideoService {
 
     }
 
-    private void saveVideoInformation() {
-        
+
+    public Video saveVideoInformation(CreateVideoDto dto, Long duration, File destFile) {
+        List<VideoTag> tag = dto.getTag();
+        VideoPublisher publisher = dto.getPublisher();
+        List<Artist> artist = dto.getArtist();
+
+        Video video = new Video();
+        video.setTitle(dto.getTitle());
+        video.setDescription(dto.getDescription());
+        video.setSerialNumber(dto.getSerialNumber());
+        video.setType(dto.getType().getId());
+        video.setPosterName(dto.getPosterName());
+        video.setPublisherId(publisher.getId());
+
+//        合集
+//        video.setSeriesId(publisher.getId());
+        video.setDuration(duration);
+//        video.setFileName(videoFile.getName());
+//        video.setFilePath(videoFile.getAbsolutePath());
+//        video.setParentFolderName(videoFile.getParent());
+        video.setCreatedAt(new Date());
+        video.setCreator(dto.getCreatorId());
+
+        videoMapper.insert(video);
+
+        ArrayList<VideoTagMap> videoTagMaps = new ArrayList<>();
+        tag.forEach(videoTag -> {
+            VideoTagMap videoTagMap = new VideoTagMap();
+            videoTagMap.setVideoId(video.getId());
+            videoTagMap.setTagId(videoTag.getId());
+            videoTagMaps.add(videoTagMap);
+        });
+
+        ArrayList<VideoArtistMap> videoArtistMaps = new ArrayList<>();
+        artist.forEach(videoArtist -> {
+            VideoArtistMap videoArtistMap = new VideoArtistMap();
+            videoArtistMap.setArtistId(videoArtist.getId());
+            videoArtistMap.setVideoId(video.getId());
+            videoArtistMaps.add(videoArtistMap);
+        });
+
+        videoTagMapMapper.insertBatch(videoTagMaps);
+        videoArtistMapMapper.insertBatch(videoArtistMaps);
+
+        return video;
     }
 
     private String resolveEnabledVideoRoot() {

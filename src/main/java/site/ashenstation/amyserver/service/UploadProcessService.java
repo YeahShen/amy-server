@@ -140,7 +140,7 @@ public class UploadProcessService {
 
 
         // TODO 后续：等 Video 实体就绪后，把视频记录落库（标题/描述/演员/类型/标签等）
-        videoService.createVideo(data, duration, m3u8File);
+//        videoService.createVideo(data, duration, m3u8File);
         sendProgress(emitterId, id, "finish", 100);
     }
 

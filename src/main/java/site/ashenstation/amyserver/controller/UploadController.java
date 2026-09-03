@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import site.ashenstation.amyserver.annotation.UploadProcess;
 import site.ashenstation.amyserver.dto.UploadChunkDto;
+import site.ashenstation.amyserver.dto.UploadProcessorKeyDto;
 import site.ashenstation.amyserver.service.UploadService;
 import site.ashenstation.amyserver.utils.SecurityUtils;
 
@@ -37,14 +38,10 @@ public class UploadController {
 
     @UploadProcess
     @GetMapping("next-step")
-    public Map<String, String> nextStep(String id) {
+    public UploadProcessorKeyDto nextStep(String id) {
         String currentUserId = SecurityUtils.getCurrentUserId();
         String tokenUid = SecurityUtils.getTokenUid();
 
-        return new HashMap<>() {{
-            put("taskId", id);
-            put("currentUserId", currentUserId);
-            put("tokenUid", tokenUid);
-        }};
+        return new UploadProcessorKeyDto(Integer.parseInt(currentUserId), tokenUid, id);
     }
 }
