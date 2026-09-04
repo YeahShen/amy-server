@@ -152,11 +152,22 @@ public class VideoService {
 
             Video video = saveVideoInformation(data, duration, destFile);
 
-            File mp4File;
+            File mp4File = destFile;
             if (!ext.equals(".mp4")) {
                 mp4File = new File(destRootFile, fileMainName + ".mp4");
                 fFmpegUtils.conversion(destFile, mp4File, FFMpegUtils.CONVERSION_TO_MP4_ARGS);
             }
+
+            File tsFile = new File(destRootFile, fileMainName + ".ts");
+            fFmpegUtils.conversion(mp4File, tsFile, FFMpegUtils.CONVERSION_TO_TS_ARGS);
+            FFMpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(mp4File.getAbsolutePath());
+
+            System.out.println(videoResolution);
+
+            File kk = new File(destRootFile, "4k");
+            kk.mkdir();
+            File mm = new File(kk, fileMainName + ".m3u8");
+            fFmpegUtils.conversion(tsFile, mm, FFMpegUtils.CONVERSION_TO_M3U8_4K_ARGS);
 
 
         } catch (Exception e) {
