@@ -28,7 +28,6 @@ import java.util.HashMap;
 public class UploadService {
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
-    private final UploadProcessService uploadProcessService;
     private final VideoService videoService;
 
     public HashMap<String, Object> uploadChunk(UploadChunkDto dto) {

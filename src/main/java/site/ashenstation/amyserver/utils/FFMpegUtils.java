@@ -15,8 +15,6 @@ import site.ashenstation.amyserver.property.FFmpegProperties;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -64,7 +62,9 @@ public class FFMpegUtils implements InitializingBean {
         return null;
     }
 
-    /** 视频分辨率值对象 */
+    /**
+     * 视频分辨率值对象
+     */
     public record VideoResolution(int width, int height) {
         @Override
         public String toString() {
@@ -95,7 +95,9 @@ public class FFMpegUtils implements InitializingBean {
         return CONVERSION_TO_M3U8_480P_ARGS;
     }
 
-    /** 按源分辨率选择 m3u8 转码档位，见 {@link #resolveM3U8ConversionArgs(int)} */
+    /**
+     * 按源分辨率选择 m3u8 转码档位，见 {@link #resolveM3U8ConversionArgs(int)}
+     */
     public static String resolveM3U8ConversionArgs(VideoResolution resolution) {
         return resolveM3U8ConversionArgs(resolution.height());
     }
@@ -115,6 +117,7 @@ public class FFMpegUtils implements InitializingBean {
                 .addOutput(target.getAbsolutePath())
                 .addExtraArgs(args.trim().split("\\s+"))
                 .done();
+
 
         this.executor.createJob(builder).run();
     }

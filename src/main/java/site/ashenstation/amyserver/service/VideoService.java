@@ -15,7 +15,7 @@ import site.ashenstation.amyserver.enums.UploadTaskType;
 import site.ashenstation.amyserver.mapper.*;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
 import site.ashenstation.amyserver.utils.FFMpegUtils;
-import site.ashenstation.amyserver.utils.FileUtil;
+import site.ashenstation.amyserver.utils.FileUtils;
 import site.ashenstation.amyserver.utils.SecurityUtils;
 
 import java.io.File;
@@ -90,7 +90,7 @@ public class VideoService {
         String uploadTempDirectory = staticResourceDirectoryProperties.getUploadTempDirectory();
         File file = new File(uploadTempDirectory, id);
 
-        FileUtil.mkdir(file);
+        FileUtils.mkdir(file);
 
         File config = new File(file, "config");
 
@@ -125,7 +125,7 @@ public class VideoService {
 
             File destFile = new File(destRootFile, fileName);
 
-            FileUtil.mkParentDirs(destFile);
+            FileUtils.mkParentDirs(destFile);
 
             List<File> chunks;
             try (var stream = Files.list(uploadDir.toFile().toPath())) {
@@ -145,7 +145,7 @@ public class VideoService {
                 }
             }
 
-            FileUtil.mergeFileChunk(destFile, chunks);
+            FileUtils.mergeFileChunk(destFile, chunks);
 
             Long duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
             final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);

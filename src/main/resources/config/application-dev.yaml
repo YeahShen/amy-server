@@ -46,7 +46,14 @@ static-resource-directory-properties:
   upload-temp-directory: C:\Users\ayuan\Documents\AMY\static\temp
   poster-directory: C:\Users\ayuan\Documents\AMY\static\poster
   poster-path-prefix: /resource/poster
-  
+
 ffmpeg:
   ffmpeg-executor-path: D:\workspace\resource\ffmpeg-n8.0-latest-win64-gpl-8.0\bin\ffmpeg.exe
   ffprobe-executor-path: D:\workspace\resource\ffmpeg-n8.0-latest-win64-gpl-8.0\bin\ffprobe.exe
+  conversion-to-mp4-args: "-y -c:v h264_amf -preset medium -crf 10 -c:a aac -b:a 320k"
+  conversion-to-ts-args: "-y -vcodec copy -acodec copy"
+  conversion-to-m3u84k-args: "-y -vf scale=3840:2160:force_original_aspect_ratio=decrease,pad=3840:2160:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 15000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts"
+  conversion-to-m3u82k-args: "-y -vf scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 8000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts"
+  conversion-to-m3u81080p-args: "-y -vf scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 5000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts"
+  conversion-to-m3u8720p-args: "-y -vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 2500k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts"
+  conversion-to-m3u8480p-args: "-y -vf scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 1200k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename segment_%d.ts"

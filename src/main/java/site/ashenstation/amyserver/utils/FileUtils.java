@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 @Slf4j
-public class FileUtil extends cn.hutool.core.io.FileUtil {
+public class FileUtils extends cn.hutool.core.io.FileUtil {
 
     public static void mergeFileChunk(File destFile, List<File> chunks) throws IOException {
         long totalBytes = 0;
