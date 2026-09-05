@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.bramp.ffmpeg.FFmpegExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.ashenstation.amyserver.config.exception.BadRequestException;
@@ -13,8 +14,9 @@ import site.ashenstation.amyserver.dto.UploadTaskDto;
 import site.ashenstation.amyserver.entity.*;
 import site.ashenstation.amyserver.enums.UploadTaskType;
 import site.ashenstation.amyserver.mapper.*;
+import site.ashenstation.amyserver.property.FFmpegProperties;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
-import site.ashenstation.amyserver.utils.FFMpegUtils;
+import site.ashenstation.amyserver.utils.FFmpegUtils;
 import site.ashenstation.amyserver.utils.FileUtils;
 import site.ashenstation.amyserver.utils.SecurityUtils;
 
@@ -42,7 +44,8 @@ public class VideoService {
     private final VideoMapper videoMapper;
     private final VideoTagMapMapper videoTagMapMapper;
     private final VideoArtistMapMapper videoArtistMapMapper;
-    private final FFMpegUtils fFmpegUtils;
+    private final FFmpegUtils fFmpegUtils;
+    private final FFmpegProperties fFmpegProperties;
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
 
@@ -152,22 +155,57 @@ public class VideoService {
 
             Video video = saveVideoInformation(data, duration, destFile);
 
+            FFmpegExecutor fFmpegExecutor = fFmpegUtils.getExecutor(destRootFile);
+
             File mp4File = destFile;
             if (!ext.equals(".mp4")) {
                 mp4File = new File(destRootFile, fileMainName + ".mp4");
-                fFmpegUtils.conversion(destFile, mp4File, FFMpegUtils.CONVERSION_TO_MP4_ARGS);
+                fFmpegUtils.conversion(destFile, mp4File, fFmpegProperties.getConversionToMp4Args(), fFmpegExecutor);
             }
 
             File tsFile = new File(destRootFile, fileMainName + ".ts");
-            fFmpegUtils.conversion(mp4File, tsFile, FFMpegUtils.CONVERSION_TO_TS_ARGS);
-            FFMpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(mp4File.getAbsolutePath());
+            fFmpegUtils.conversion(mp4File, tsFile, fFmpegProperties.getConversionToTsArgs(), fFmpegExecutor);
 
-            System.out.println(videoResolution);
+            FFmpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(destFile.getAbsolutePath());
 
-            File kk = new File(destRootFile, "4k");
-            kk.mkdir();
-            File mm = new File(kk, fileMainName + ".m3u8");
-            fFmpegUtils.conversion(tsFile, mm, FFMpegUtils.CONVERSION_TO_M3U8_4K_ARGS);
+            int height = videoResolution.height();
+
+            if (height >= FFmpegUtils._4K) {
+                File _4kRoot = new File(destRootFile, "_4k");
+                FileUtils.mkdir(_4kRoot);
+
+                File _4kFile = new File(_4kRoot, fileMainName + "_4k.m3u8");
+                fFmpegUtils.conversion(tsFile, _4kFile, fFmpegProperties.getConversionToM3u84kArgs() + " " + _4kRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
+            }
+
+            if (height >= FFmpegUtils._2K) {
+                File _2kRoot = new File(destRootFile, "_2k");
+                FileUtils.mkdir(_2kRoot);
+
+                File _2kFile = new File(_2kRoot, fileMainName + "_2k.m3u8");
+                fFmpegUtils.conversion(tsFile, _2kFile, fFmpegProperties.getConversionToM3u82kArgs() + " " + _2kRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
+            }
+
+            if (height >= FFmpegUtils._1080P) {
+                File _1080pRoot = new File(destRootFile, "_1080p");
+                FileUtils.mkdir(_1080pRoot);
+
+                File _1080pFile = new File(_1080pRoot, fileMainName + "_1080p.m3u8");
+                fFmpegUtils.conversion(tsFile, _1080pFile, fFmpegProperties.getConversionToM3u81080pArgs() + " " + _1080pRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
+            }
+
+            if (height >= FFmpegUtils._720P) {
+                File _720pRoot = new File(destRootFile, "_720p");
+                FileUtils.mkdir(_720pRoot);
+
+                File _720file = new File(_720pRoot, fileMainName + "_720p.m3u8");
+                fFmpegUtils.conversion(tsFile, _720file, fFmpegProperties.getConversionToM3u8720pArgs() + " " + _720pRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
+            }
+
+            File _480pRoot = new File(destRootFile, "_480p");
+            FileUtils.mkdir(_480pRoot);
+            File _480pile = new File(_480pRoot, fileMainName + "_480p.m3u8");
+            fFmpegUtils.conversion(tsFile, _480pile, fFmpegProperties.getConversionToM3u8480pArgs() + " " + _480pRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
 
 
         } catch (Exception e) {
