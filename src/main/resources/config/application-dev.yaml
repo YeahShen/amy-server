@@ -57,3 +57,5 @@ ffmpeg:
   conversion-to-m3u81080p-args: "-y -vf scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 5000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename "
   conversion-to-m3u8720p-args: "-y -vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 2500k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename "
   conversion-to-m3u8480p-args: "-y -vf scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2 -c:v h264_amf -b:v 1200k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename "
+  video-encoder: h264_amf
+  audio-encoder: aac

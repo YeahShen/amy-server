@@ -88,6 +88,14 @@ public class FFmpegUtils {
         return null;
     }
 
+    public void conversion(File source, String args, FFmpegExecutor fFmpegExecutor) {
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(source.getAbsolutePath())
+                .addExtraArgs(args.trim().split("\\s+"));
+        fFmpegExecutor.createJob(builder).run();
+    }
+
+
     public void conversion(File source, File target, String args, FFmpegExecutor fFmpegExecutor) {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(source.getAbsolutePath())
@@ -115,15 +123,13 @@ public class FFmpegUtils {
     /**
      * 生成自适应的 FFmpeg HLS 转码命令（单行，无换行）
      *
-     * @param inputFilePath 输入视频文件路径
-     * @param maxWidth      最高分辨率宽度
-     * @param maxHeight     最高分辨率高度
-     * @param videoEncoder  视频编码器名称（如 "libx264", "h264_nvenc", "h264_amf"）
-     * @param audioEncoder  音频编码器名称（如 "aac", "libmp3lame", "copy"）
+     * @param maxWidth     最高分辨率宽度
+     * @param maxHeight    最高分辨率高度
+     * @param videoEncoder 视频编码器名称（如 "libx264", "h264_nvenc", "h264_amf"）
+     * @param audioEncoder 音频编码器名称（如 "aac", "libmp3lame", "copy"）
      * @return 完整的 FFmpeg 命令字符串（单行），若无法匹配返回 null
      */
-    public FFmpegUtils.ConversionPlan generateAdaptiveFFmpegCommand(String inputFilePath,
-                                                                    int maxWidth,
+    public FFmpegUtils.ConversionPlan generateAdaptiveFFmpegCommand(int maxWidth,
                                                                     int maxHeight,
                                                                     String videoEncoder,
                                                                     String audioEncoder) {
@@ -153,7 +159,7 @@ public class FFmpegUtils {
         StringBuilder cmd = new StringBuilder();
 
         // 基础命令头
-        cmd.append("ffmpeg -i ").append(inputFilePath).append(" -y ");
+        cmd.append(" -y ");
 
         // ---------- 构建 filter_complex ----------
         cmd.append("-filter_complex \"");
@@ -216,16 +222,18 @@ public class FFmpegUtils {
             }
         }
 
+        cmd.append(" -master_pl_name ");
+
 //        return cmd.toString();
         return new FFmpegUtils.ConversionPlan(cmd.toString(), _label);
     }
 
-    // 示例：使用 NVIDIA NVENC 编码器
+//    // 示例：使用 NVIDIA NVENC 编码器
 //    public static void main(String[] args) {
 //        ConversionPlan conversionPlan = generateAdaptiveFFmpegCommand(
 //                "xx.mp4",
 //                3840, 2160,
-//                "h264_nvenc",    // 视频编码器
+//                "h264_amf",    // 视频编码器
 //                "aac"            // 音频编码器
 //        );
 //        assert conversionPlan != null;
