@@ -1,0 +1,21 @@
+#EXTM3U
+<#if has4k>
+    #EXT-X-STREAM-INF:BANDWIDTH=15000000,RESOLUTION=3840x2160,CODECS="avc1.42e01f,mp4a.40.2"
+    _4k/${name}_4k.m3u8
+</#if>
+<#if has2k>
+    #EXT-X-STREAM-INF:BANDWIDTH=8000000,RESOLUTION=2560x1440,CODECS="avc1.42e01f,mp4a.40.2"
+    _2k/${name}_2k.m3u8
+</#if>
+<#if has1080p>
+    #EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+    _1080p/${name}_1080p.m3u8
+</#if>
+<#if has720p>
+    #EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720
+    _720p/${name}_720p.m3u8
+</#if>
+<#if has480p>
+    #EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=854x480
+    _480p/${name}_1080p.m3u8
+</#if>

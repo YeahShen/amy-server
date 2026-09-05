@@ -12,6 +12,6 @@ import lombok.ToString;
 public class VideoTagMap {
     @Id(keyType = KeyType.Auto)
     private Integer id;
-    private Integer videoId;
+    private String videoId;
     private Integer tagId;
 }

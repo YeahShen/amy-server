@@ -1,10 +1,10 @@
 package site.ashenstation.amyserver.entity;
 
 import com.mybatisflex.annotation.Id;
-import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.ToString;
+import site.ashenstation.amyserver.enums.VideoStatus;
 
 import java.util.Date;
 
@@ -12,8 +12,8 @@ import java.util.Date;
 @Data
 @ToString
 public class Video {
-    @Id(keyType = KeyType.Auto)
-    private Integer id;
+    @Id
+    private String id;
     private String title;
     private String description;
     private String serialNumber;
@@ -22,9 +22,9 @@ public class Video {
     private Integer publisherId;
     private Integer seriesId;
     private Long duration;
-    private String filePath;
-    private String fileName;
     private String parentFolderName;
     private Date createdAt;
     private Integer creator;
+
+    private VideoStatus status;
 }

@@ -2,17 +2,24 @@ package site.ashenstation.amyserver.service;
 
 import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mybatisflex.core.util.UpdateEntity;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.multipart.MultipartFile;
 import site.ashenstation.amyserver.config.exception.BadRequestException;
 import site.ashenstation.amyserver.dto.CreateVideoDto;
 import site.ashenstation.amyserver.dto.UploadProcessorKeyDto;
 import site.ashenstation.amyserver.dto.UploadTaskDto;
+import site.ashenstation.amyserver.dto.VideoTemporaryInformationDto;
 import site.ashenstation.amyserver.entity.*;
 import site.ashenstation.amyserver.enums.UploadTaskType;
+import site.ashenstation.amyserver.enums.VideoStatus;
 import site.ashenstation.amyserver.mapper.*;
 import site.ashenstation.amyserver.property.FFmpegProperties;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
@@ -26,11 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +49,9 @@ public class VideoService {
     private final VideoArtistMapMapper videoArtistMapMapper;
     private final FFmpegUtils fFmpegUtils;
     private final FFmpegProperties fFmpegProperties;
+    private final Configuration freemarkerConfig;
+
+    private final TransactionTemplate transactionTemplate;
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
 
@@ -117,8 +123,9 @@ public class VideoService {
 
 
     public void processVideoUploadNext(UploadProcessorKeyDto uploadProcessorKeyDto, CreateVideoDto data) {
+        Path uploadDir = Paths.get(staticResourceDirectoryProperties.getUploadTempDirectory(), uploadProcessorKeyDto.getTaskId());
+
         try {
-            Path uploadDir = Paths.get(staticResourceDirectoryProperties.getUploadTempDirectory(), uploadProcessorKeyDto.getTaskId());
 
             String ext = data.getFileExt() != null ? data.getFileExt() : ".mp4";
             String fileMainName = IdUtil.fastSimpleUUID();
@@ -151,16 +158,22 @@ public class VideoService {
             FileUtils.mergeFileChunk(destFile, chunks);
 
             Long duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
-            final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
 
-            Video video = saveVideoInformation(data, duration, destFile);
+            VideoTemporaryInformationDto videoTemporaryInformationDto = saveVideoInformation(data, duration, destFile);
+
+//            insert
+            videoTagMapMapper.insertBatch(videoTemporaryInformationDto.getVideoTagMaps());
+            videoArtistMapMapper.insertBatch(videoTemporaryInformationDto.getVideoArtistMaps());
+            videoMapper.insert(videoTemporaryInformationDto.getVideo());
 
             FFmpegExecutor fFmpegExecutor = fFmpegUtils.getExecutor(destRootFile);
 
-            File mp4File = destFile;
+            File mp4File;
             if (!ext.equals(".mp4")) {
                 mp4File = new File(destRootFile, fileMainName + ".mp4");
                 fFmpegUtils.conversion(destFile, mp4File, fFmpegProperties.getConversionToMp4Args(), fFmpegExecutor);
+            } else {
+                mp4File = destFile;
             }
 
             File tsFile = new File(destRootFile, fileMainName + ".ts");
@@ -170,9 +183,15 @@ public class VideoService {
 
             int height = videoResolution.height();
 
+            HashMap<String, Object> templateKeys = new HashMap<>() {{
+                put("name", fileMainName);
+            }};
+
             if (height >= FFmpegUtils._4K) {
                 File _4kRoot = new File(destRootFile, "_4k");
                 FileUtils.mkdir(_4kRoot);
+
+                templateKeys.put("has4k", true);
 
                 File _4kFile = new File(_4kRoot, fileMainName + "_4k.m3u8");
                 fFmpegUtils.conversion(tsFile, _4kFile, fFmpegProperties.getConversionToM3u84kArgs() + " " + _4kRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
@@ -182,6 +201,8 @@ public class VideoService {
                 File _2kRoot = new File(destRootFile, "_2k");
                 FileUtils.mkdir(_2kRoot);
 
+                templateKeys.put("has2k", true);
+
                 File _2kFile = new File(_2kRoot, fileMainName + "_2k.m3u8");
                 fFmpegUtils.conversion(tsFile, _2kFile, fFmpegProperties.getConversionToM3u82kArgs() + " " + _2kRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
             }
@@ -189,6 +210,8 @@ public class VideoService {
             if (height >= FFmpegUtils._1080P) {
                 File _1080pRoot = new File(destRootFile, "_1080p");
                 FileUtils.mkdir(_1080pRoot);
+
+                templateKeys.put("has1080p", true);
 
                 File _1080pFile = new File(_1080pRoot, fileMainName + "_1080p.m3u8");
                 fFmpegUtils.conversion(tsFile, _1080pFile, fFmpegProperties.getConversionToM3u81080pArgs() + " " + _1080pRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
@@ -198,29 +221,59 @@ public class VideoService {
                 File _720pRoot = new File(destRootFile, "_720p");
                 FileUtils.mkdir(_720pRoot);
 
+                templateKeys.put("has720p", true);
+
                 File _720file = new File(_720pRoot, fileMainName + "_720p.m3u8");
                 fFmpegUtils.conversion(tsFile, _720file, fFmpegProperties.getConversionToM3u8720pArgs() + " " + _720pRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
             }
 
             File _480pRoot = new File(destRootFile, "_480p");
             FileUtils.mkdir(_480pRoot);
+
+            templateKeys.put("has480p", true);
             File _480pile = new File(_480pRoot, fileMainName + "_480p.m3u8");
             fFmpegUtils.conversion(tsFile, _480pile, fFmpegProperties.getConversionToM3u8480pArgs() + " " + _480pRoot.getName() + "/_segment_%d.ts", fFmpegExecutor);
+
+            File indexFile = new File(destRootFile, "index.m3u8");
+
+            Template template = freemarkerConfig.getTemplate("m3u8/index.ftlh");
+
+            String m3u8Content = FreeMarkerTemplateUtils.processTemplateIntoString(template, templateKeys);
+
+            Files.writeString(indexFile.toPath(), m3u8Content, StandardCharsets.UTF_8);
+
+            Video video1 = UpdateEntity.of(Video.class, data.getId());
+            video1.setStatus(VideoStatus.NORMAL);
+
+            videoMapper.update(video1);
+
+//            删除临时文件
+            FileUtils.del(destFile);
+
+            if (FileUtils.exist(mp4File)) {
+                FileUtils.del(mp4File);
+            }
+
+            FileUtils.del(tsFile);
 
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
+        File uploadDirFile = uploadDir.toFile();
+        FileUtils.del(uploadDirFile);
+
     }
 
 
-    public Video saveVideoInformation(CreateVideoDto dto, Long duration, File destFile) {
+    public VideoTemporaryInformationDto saveVideoInformation(CreateVideoDto dto, Long duration, File destFile) {
         List<VideoTag> tag = dto.getTag();
         VideoPublisher publisher = dto.getPublisher();
         List<Artist> artist = dto.getArtist();
 
         Video video = new Video();
+        video.setId(dto.getId());
         video.setTitle(dto.getTitle());
         video.setDescription(dto.getDescription());
         video.setSerialNumber(dto.getSerialNumber());
@@ -228,16 +281,12 @@ public class VideoService {
         video.setPosterName(dto.getPosterName());
         video.setPublisherId(publisher.getId());
 
-//        合集
-//        video.setSeriesId(publisher.getId());
+        video.setSeriesId(dto.getSeriesId());
         video.setDuration(duration);
-//        video.setFileName(videoFile.getName());
-//        video.setFilePath(videoFile.getAbsolutePath());
-//        video.setParentFolderName(videoFile.getParent());
+        video.setParentFolderName(destFile.getParent());
         video.setCreatedAt(new Date());
         video.setCreator(dto.getCreatorId());
-
-        videoMapper.insert(video);
+        video.setStatus(VideoStatus.CONVERSION);
 
         ArrayList<VideoTagMap> videoTagMaps = new ArrayList<>();
         tag.forEach(videoTag -> {
@@ -255,10 +304,7 @@ public class VideoService {
             videoArtistMaps.add(videoArtistMap);
         });
 
-        videoTagMapMapper.insertBatch(videoTagMaps);
-        videoArtistMapMapper.insertBatch(videoArtistMaps);
-
-        return video;
+        return new VideoTemporaryInformationDto(videoArtistMaps, videoTagMaps, video);
     }
 
     private String resolveEnabledVideoRoot() {

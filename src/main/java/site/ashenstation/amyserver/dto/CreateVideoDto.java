@@ -25,4 +25,5 @@ public class CreateVideoDto {
     private VideoPublisher publisher;
     private List<VideoTag> tag;
     private Integer creatorId;
+    private Integer seriesId;
 }
