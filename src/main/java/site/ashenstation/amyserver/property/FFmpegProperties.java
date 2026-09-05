@@ -18,5 +18,8 @@ public class FFmpegProperties {
     private String conversionToM3u81080pArgs;
     private String conversionToM3u8720pArgs;
     private String conversionToM3u8480pArgs;
+
+    private String videoEncoder;
+    private String audioEncoder;
 }
 

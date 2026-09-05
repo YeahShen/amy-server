@@ -17,5 +17,5 @@
 </#if>
 <#if has480p>
     #EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=854x480
-    _480p/${name}_1080p.m3u8
+    _480p/${name}_480p.m3u8
 </#if>
