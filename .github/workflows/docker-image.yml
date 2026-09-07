@@ -21,7 +21,7 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # 用 JDK 21 构建（与 Dockerfile 基础镜像 21-jre-alpine 一致）；pom java.version=17 决定字节码目标仍为 17
+      # 用 JDK 21 构建（与 Dockerfile 基础镜像 21-jre-alpine、pom java.version 一致）
       - name: 安装 JDK 21
         uses: actions/setup-java@v4
         with:
@@ -36,33 +36,42 @@ jobs:
           chmod +x ./mvnw
           ./mvnw -B -DskipTests package
 
-      # master 推送必须有 ACR 凭据；缺失时给明确报错而非等登录步骤失败
-      - name: 校验 ACR 凭据（仅 master 推送）
-        if: github.event_name == 'push' && (secrets.ALIYUN_ACR_USERNAME == '' || secrets.ALIYUN_ACR_PASSWORD == '')
+      # master 推送 / 手动触发必须有 ACR 凭据；缺失时给明确报错而非等登录步骤失败
+      # 注：secrets 不能在 if: 表达式中直接引用（解析期报 Unrecognized named-value），
+      #     故先映射到步骤 env，再在 run 脚本内做空值校验
+      - name: 校验 ACR 凭据
+        if: github.event_name != 'pull_request'
+        env:
+          ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
         run: |
-          echo "master 推送需要 ALIYUN_ACR_USERNAME / ALIYUN_ACR_PASSWORD secrets"
-          echo "请在仓库 Settings → Secrets and variables → Actions 中配置阿里云 ACR 用户名与密码"
+          if [ -z "$ACR_USERNAME" ] || [ -z "$ACR_PASSWORD" ]; then
+            echo "此事件需要 ALIYUN_ACR_USERNAME / ALIYUN_ACR_PASSWORD secrets"
+            echo "请在仓库 Settings → Secrets and variables → Actions 中配置阿里云 ACR 用户名与密码"
+            exit 1
+          fi
 
       - name: 设置 Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 配置了凭据才登录：master 推送发布镜像需要；若基础镜像为私有，PR 构建同样需要
+      # 登录只在需要时发生：master 推送 / 手动触发必登录（上面校验步骤已保证凭据存在）；
+      # 同仓库分支的 PR 也登录（基础镜像为私有时拉取需要）；fork 的 PR 拿不到 secrets，自动跳过
       - name: 登录阿里云 ACR
         uses: docker/login-action@v3
-        if: secrets.ALIYUN_ACR_USERNAME != ''
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         with:
           registry: registry.cn-hangzhou.aliyuncs.com
           username: ${{ secrets.ALIYUN_ACR_USERNAME }}
           password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
       # Dockerfile 依赖 target/*.jar（即上方 Maven 产物），注意不能把 target 加进 .dockerignore
-      # PR 只构建不推送；master 推 latest + 完整 commit sha 两个 tag，便于回滚指定版本
+      # PR 只构建不推送；master 推送 / 手动触发推 latest + 完整 commit sha 两个 tag，便于回滚指定版本
       # type=gha 复用上次构建的镜像层，二次构建免重复下载/执行耗时步骤
       - name: 构建并推送镜像
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name == 'push' }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: |
             registry.cn-hangzhou.aliyuncs.com/ashen_station/amy-server:latest
             registry.cn-hangzhou.aliyuncs.com/ashen_station/amy-server:${{ github.sha }}
