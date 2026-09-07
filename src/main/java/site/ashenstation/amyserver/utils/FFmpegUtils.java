@@ -106,45 +106,65 @@ public class FFmpegUtils {
         fFmpegExecutor.createJob(builder).run();
     }
 
-    public void conversion(File source, File target, String args, FFmpegExecutor fFmpegExecutor, ProgressListener progressListener) {
+    public void conversion(String source, String target, String args, FFmpegExecutor fFmpegExecutor, ProgressListener progressListener) {
         FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(source.getAbsolutePath())
-                .addOutput(target.getAbsolutePath())
+                .setInput(source)
+                .addOutput(target)
                 .addExtraArgs(args.trim().split("\\s+"))
                 .done();
 
         fFmpegExecutor.createJob(builder, progressListener).run();
     }
 
-    public record ConversionPlan(String command, List<String> label) {
+    /**
+     * 以参数列表方式转码（参数值含空格时用本方法：逐个元素直传进程。
+     * 勿把参数拼成字符串加引号再按空格拆分——ProcessBuilder 不经 shell，引号会被原样传给 ffmpeg）
+     */
+    public void conversion(String source, String target, List<String> args, FFmpegExecutor fFmpegExecutor, ProgressListener progressListener) {
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(source)
+                .addOutput(target)
+                .addExtraArgs(args.toArray(new String[0]))
+                .done();
+
+        fFmpegExecutor.createJob(builder, progressListener).run();
+    }
+
+    public record ConversionPlan(List<String> command, List<String> label) {
 
     }
 
     /**
-     * 生成自适应的 FFmpeg HLS 转码命令（单行，无换行）
+     * 生成自适应多清晰度 HLS 转码的 FFmpeg 参数列表
+     * <p>
+     * 注意：返回的是进程参数列表（一个元素 = 一个 argv）。net.bramp 经 ProcessBuilder 直传进程、不经 shell，
+     * 因此值内含空格的选项（-filter_complex / -var_stream_map）必须整体作为单个元素，
+     * 不能拼进字符串用引号包裹再按空格拆分，否则引号会被当成参数内容导致解析失败。
      *
      * @param maxWidth     最高分辨率宽度
      * @param maxHeight    最高分辨率高度
-     * @param videoEncoder 视频编码器名称（如 "libx264", "h264_nvenc", "h264_amf"）
+     * @param videoEncoder 视频编码器名称（如 "libx264", "h264_nvenc", "h264_amf", "h264_qsv"）
      * @param audioEncoder 音频编码器名称（如 "aac", "libmp3lame", "copy"）
-     * @return 完整的 FFmpeg 命令字符串（单行），若无法匹配返回 null
+     * @return 参数列表（不含输出文件名，输出 target 由调用方传入 "%v/index.m3u8"），若无法匹配返回 null
      */
-    public FFmpegUtils.ConversionPlan generateAdaptiveFFmpegCommand(int maxWidth,
-                                                                    int maxHeight,
-                                                                    String videoEncoder,
-                                                                    String audioEncoder) {
-        // 预定义分辨率阶梯（从高到低）
+    public ConversionPlan generateAdaptiveFFmpegCommand(int maxWidth,
+                                                        int maxHeight,
+                                                        String videoEncoder,
+                                                        String audioEncoder) {
+        // 1. 预定义分辨率阶梯（从高到低）
+        // 注意：480p 宽度使用 848，避免奇数宽导致 H.264 硬件编码器报错
         int[][] resolutions = {
                 {3840, 2160},  // 4K
                 {2560, 1440},  // 2K
                 {1920, 1080},  // 1080p
                 {1280, 720},   // 720p
-                {854, 480}     // 480p
+                {848, 480}     // 480p
         };
         int[] bitrates = {15000, 8000, 5000, 2500, 1200};
-        String[] labels = {"_4k", "_2k", "_1080p", "_720p", "_480p"};
+        // 各档目录/流名（-var_stream_map 的 name 会替换输出里的 %v，目录名须与此一致）
+        String[] labels = {"v4k", "v2k", "v1080p", "v720p", "v480p"};
 
-        // 筛选有效分辨率
+        // 2. 筛选有效分辨率
         List<Integer> validIndices = new ArrayList<>();
         for (int i = 0; i < resolutions.length; i++) {
             if (resolutions[i][0] <= maxWidth && resolutions[i][1] <= maxHeight) {
@@ -156,29 +176,28 @@ public class FFmpegUtils {
         }
 
         int n = validIndices.size();
-        StringBuilder cmd = new StringBuilder();
+        List<String> args = new ArrayList<>();
+        List<String> resultLabels = new ArrayList<>();
 
-        // 基础命令头
-        cmd.append(" -y ");
+        // 覆盖已存在的输出文件
+        args.add("-y");
 
-        // ---------- 构建 filter_complex ----------
-        cmd.append("-filter_complex \"");
+        // ---------- 构建 filter_complex（整段图作为单个参数元素） ----------
+        StringBuilder filterComplex = new StringBuilder();
 
         // 视频分流
-        cmd.append("[0:v]split=").append(n);
+        filterComplex.append("[0:v]split=").append(n);
         for (int i = 0; i < n; i++) {
-            cmd.append("[v").append(i + 1).append("]");
+            filterComplex.append("[v").append(i + 1).append("]");
         }
-        cmd.append(";");
+        filterComplex.append(";");
 
-        List<String> _label = new ArrayList<>();
-
-        // 每个分支应用 scale+pad
+        // 每个视频分支应用 scale + pad
         for (int i = 0; i < n; i++) {
             int idx = validIndices.get(i);
             int w = resolutions[idx][0];
             int h = resolutions[idx][1];
-            cmd.append("[v").append(i + 1).append("]")
+            filterComplex.append("[v").append(i + 1).append("]")
                     .append("scale=").append(w).append(":").append(h)
                     .append(":force_original_aspect_ratio=decrease,")
                     .append("pad=").append(w).append(":").append(h)
@@ -187,60 +206,62 @@ public class FFmpegUtils {
         }
 
         // 音频分流
-        cmd.append("[0:a]asplit=").append(n);
+        filterComplex.append("[0:a]asplit=").append(n);
         for (int i = 0; i < n; i++) {
-            cmd.append("[a").append(i + 1).append("]");
+            filterComplex.append("[a").append(i + 1).append("]");
         }
-        cmd.append("\" ");
+        args.add("-filter_complex");
+        args.add(filterComplex.toString());
 
+        // ---------- 每个输出的映射和编码参数 ----------
+        StringBuilder varStreamMap = new StringBuilder();
 
-        // ---------- 每个输出的映射和参数 ----------
         for (int i = 0; i < n; i++) {
             int idx = validIndices.get(i);
             String label = labels[idx];
             int bitrate = bitrates[idx];
 
-            _label.add(label.replace("_", ""));
+            resultLabels.add(label);
 
-            cmd.append("-map \"[out").append(i + 1).append("]\" ")
-                    .append("-map \"[a").append(i + 1).append("]\" ")
-                    .append("-c:v ").append(videoEncoder).append(" -b:v ").append(bitrate).append("k ")
-                    .append("-g 48 -sc_threshold 0 ")
-                    .append("-c:a ").append(audioEncoder);
+            // 映射视频与音频，并绑定流索引编码参数 (:0, :1, :2...)
+            args.add("-map");
+            args.add("[out" + (i + 1) + "]");
+            args.add("-map");
+            args.add("[a" + (i + 1) + "]");
+            args.add("-c:v:" + i);
+            args.add(videoEncoder);
+            args.add("-b:v:" + i);
+            args.add(bitrate + "k");
 
-            // 若音频编码器不是 "copy"，则需要指定码率
-            if (!"copy".equalsIgnoreCase(audioEncoder)) {
-                cmd.append(" -b:a 128k");
+            // 动态构建 -var_stream_map 参数（含空格，整体作为单个元素）
+            if (i > 0) {
+                varStreamMap.append(" ");
             }
-
-            cmd.append(" -hls_time 6 -hls_playlist_type vod ")
-                    .append("-hls_segment_filename ").append(label).append("/segment_%d.ts ")
-                    .append(label).append("/index.m3u8");
-
-            if (i < n - 1) {
-                cmd.append(" ");
-            }
+            varStreamMap.append("v:").append(i).append(",a:").append(i).append(",name:").append(label);
         }
 
-        cmd.append(" -master_pl_name ");
+        // ---------- 公共 HLS 输出选项 ----------
+        args.add("-g");
+        args.add("48");
+        args.add("-sc_threshold");
+        args.add("0");
+        args.add("-c:a");
+        args.add(audioEncoder);
+        args.add("-b:a");
+        args.add("128k");
+        args.add("-f");
+        args.add("hls");
+        args.add("-hls_time");
+        args.add("6");
+        args.add("-hls_playlist_type");
+        args.add("vod");
+        args.add("-hls_segment_filename");
+        args.add("%v/segment_%03d.ts");
+        args.add("-master_pl_name");
+        args.add("index.m3u8");
+        args.add("-var_stream_map");
+        args.add(varStreamMap.toString());
 
-//        return cmd.toString();
-        return new FFmpegUtils.ConversionPlan(cmd.toString(), _label);
+        return new ConversionPlan(args, resultLabels);
     }
-
-//    // 示例：使用 NVIDIA NVENC 编码器
-//    public static void main(String[] args) {
-//        ConversionPlan conversionPlan = generateAdaptiveFFmpegCommand(
-//                "xx.mp4",
-//                3840, 2160,
-//                "h264_amf",    // 视频编码器
-//                "aac"            // 音频编码器
-//        );
-//        assert conversionPlan != null;
-//        if (conversionPlan.command != null) {
-//            System.out.println("单行命令：\n" + conversionPlan.command);
-//        } else {
-//            System.out.println("无匹配分辨率。");
-//        }
-//    }
 }

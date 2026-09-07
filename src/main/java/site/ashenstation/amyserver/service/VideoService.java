@@ -7,6 +7,8 @@ import freemarker.template.Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpegExecutor;
+import net.bramp.ffmpeg.progress.Progress;
+import net.bramp.ffmpeg.progress.ProgressListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +33,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -179,25 +185,25 @@ public class VideoService {
 
             FFmpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(destFile.getAbsolutePath());
 
-            int height = videoResolution.height();
-
-            HashMap<String, Object> templateKeys = new HashMap<>() {{
-                put("name", fileMainName);
-            }};
-
-
             FFmpegUtils.ConversionPlan conversionPlan = fFmpegUtils.generateAdaptiveFFmpegCommand(videoResolution.width(), videoResolution.height(), fFmpegProperties.getVideoEncoder(), fFmpegProperties.getAudioEncoder());
 
             List<String> label = conversionPlan.label();
 
+            // 预创建各清晰度目录：目录名须与 -var_stream_map 的 name（v4k/v2k/...）一致，%v 会被替换成该名字
             for (String type : label) {
-                FileUtils.mkdir(new File(destRootFile, "_" + type));
+                FileUtils.mkdir(new File(destRootFile, type));
             }
 
-            File file = new File(destRootFile, "index.m3u8");
+            fFmpegUtils.conversion(tsFile.getAbsolutePath(), "%v/index.m3u8", conversionPlan.command(), fFmpegExecutor, new ProgressListener() {
+                final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
 
-            fFmpegUtils.conversion(tsFile, file, conversionPlan.command(), fFmpegExecutor);
-            
+                @Override
+                public void progress(Progress progress) {
+                    double percentage = progress.out_time_ns / duration_ns;
+                    System.out.println(percentage);
+                }
+            });
+
             Video video1 = UpdateEntity.of(Video.class, data.getId());
             video1.setStatus(VideoStatus.NORMAL);
 
@@ -214,6 +220,7 @@ public class VideoService {
 
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
 
