@@ -88,18 +88,11 @@ public class FFmpegUtils {
         return null;
     }
 
-    public void conversion(File source, String args, FFmpegExecutor fFmpegExecutor) {
-        FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(source.getAbsolutePath())
-                .addExtraArgs(args.trim().split("\\s+"));
-        fFmpegExecutor.createJob(builder).run();
-    }
 
-
-    public void conversion(File source, File target, String args, FFmpegExecutor fFmpegExecutor) {
+    public void conversion(String source, String target, String args, FFmpegExecutor fFmpegExecutor) {
         FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(source.getAbsolutePath())
-                .addOutput(target.getAbsolutePath())
+                .setInput(source)
+                .addOutput(target)
                 .addExtraArgs(args.trim().split("\\s+"))
                 .done();
 

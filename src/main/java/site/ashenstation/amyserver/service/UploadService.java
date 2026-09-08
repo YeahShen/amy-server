@@ -14,6 +14,7 @@ import site.ashenstation.amyserver.dto.UploadProcessorKeyDto;
 import site.ashenstation.amyserver.dto.UploadTaskDto;
 import site.ashenstation.amyserver.enums.UploadTaskType;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
+import site.ashenstation.amyserver.utils.RedisUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class UploadService {
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
     private final VideoService videoService;
+    private final RedisUtils redisUtils;
 
     public HashMap<String, Object> uploadChunk(UploadChunkDto dto) {
         String id = dto.getId();
@@ -53,7 +55,9 @@ public class UploadService {
     @Async("AmyTaskExecutor")
     public void nextStep(UploadProcessorKeyDto uploadProcessorKeyDto) {
         try {
+
             Path uploadDir = Paths.get(staticResourceDirectoryProperties.getUploadTempDirectory(), uploadProcessorKeyDto.getTaskId());
+
 
             // 任务被处理过（临时目录已清理）则直接跳过，保证接口可重复调用
             if (!Files.exists(uploadDir)) {
@@ -80,6 +84,8 @@ public class UploadService {
                 if (data == null) {
                     throw new IOException("config 中 data 为空");
                 }
+
+                redisUtils.hset("upload-task:" + envelope.getType(), uploadProcessorKeyDto.getTaskId(), uploadProcessorKeyDto);
 
                 videoService.processVideoUploadNext(uploadProcessorKeyDto, data);
 

@@ -3,21 +3,17 @@ package site.ashenstation.amyserver.service;
 import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.util.UpdateEntity;
-import freemarker.template.Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import site.ashenstation.amyserver.config.exception.BadRequestException;
-import site.ashenstation.amyserver.dto.CreateVideoDto;
-import site.ashenstation.amyserver.dto.UploadProcessorKeyDto;
-import site.ashenstation.amyserver.dto.UploadTaskDto;
-import site.ashenstation.amyserver.dto.VideoTemporaryInformationDto;
+import site.ashenstation.amyserver.dto.*;
 import site.ashenstation.amyserver.entity.*;
+import site.ashenstation.amyserver.enums.SseMessageEvent;
 import site.ashenstation.amyserver.enums.UploadTaskType;
 import site.ashenstation.amyserver.enums.VideoStatus;
 import site.ashenstation.amyserver.mapper.*;
@@ -25,6 +21,7 @@ import site.ashenstation.amyserver.property.FFmpegProperties;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
 import site.ashenstation.amyserver.utils.FFmpegUtils;
 import site.ashenstation.amyserver.utils.FileUtils;
+import site.ashenstation.amyserver.utils.RedisUtils;
 import site.ashenstation.amyserver.utils.SecurityUtils;
 
 import java.io.File;
@@ -33,10 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -53,9 +47,9 @@ public class VideoService {
     private final VideoArtistMapMapper videoArtistMapMapper;
     private final FFmpegUtils fFmpegUtils;
     private final FFmpegProperties fFmpegProperties;
-    private final Configuration freemarkerConfig;
+    private final RedisUtils redisUtils;
 
-    private final TransactionTemplate transactionTemplate;
+    private final SseService sseService;
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
 
@@ -165,7 +159,6 @@ public class VideoService {
 
             VideoTemporaryInformationDto videoTemporaryInformationDto = saveVideoInformation(data, duration, destFile);
 
-//            insert
             videoTagMapMapper.insertBatch(videoTemporaryInformationDto.getVideoTagMaps());
             videoArtistMapMapper.insertBatch(videoTemporaryInformationDto.getVideoArtistMaps());
             videoMapper.insert(videoTemporaryInformationDto.getVideo());
@@ -175,13 +168,13 @@ public class VideoService {
             File mp4File;
             if (!ext.equals(".mp4")) {
                 mp4File = new File(destRootFile, fileMainName + ".mp4");
-                fFmpegUtils.conversion(destFile, mp4File, fFmpegProperties.getConversionToMp4Args(), fFmpegExecutor);
+                fFmpegUtils.conversion(destFile.getAbsolutePath(), mp4File.getAbsolutePath(), fFmpegProperties.getConversionToMp4Args(), fFmpegExecutor);
             } else {
                 mp4File = destFile;
             }
 
             File tsFile = new File(destRootFile, fileMainName + ".ts");
-            fFmpegUtils.conversion(mp4File, tsFile, fFmpegProperties.getConversionToTsArgs(), fFmpegExecutor);
+            fFmpegUtils.conversion(mp4File.getAbsolutePath(), tsFile.getAbsolutePath(), fFmpegProperties.getConversionToTsArgs(), fFmpegExecutor);
 
             FFmpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(destFile.getAbsolutePath());
 
@@ -218,6 +211,16 @@ public class VideoService {
 
             FileUtils.del(tsFile);
 
+            redisUtils.hdel("upload-task:video", data.getId());
+
+            String sseId = uploadProcessorKeyDto.getUserId() + ":" + uploadProcessorKeyDto.getTokenUid();
+
+            sseService.SendMessage(sseId, new SseMessageDto(SseMessageEvent.UPLOAD_STATUS, new HashMap<>() {{
+                put("type", "video:conversion");
+                put("status", "finish");
+                put("id", data.getId());
+                put("artist", data.getArtist());
+            }}));
 
         } catch (Exception e) {
             e.printStackTrace();
