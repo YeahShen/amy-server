@@ -81,3 +81,10 @@ jobs:
             registry.cn-hangzhou.aliyuncs.com/ashen_station/amy-server:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: 触发服务器 Webhook 部署
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: https://hooks.ashen-station.top/hooks/deploy-my-app
+          method: 'GET'
+          customHeaders: '{"X-Webhook-Secret": "${{ secrets.WEBHOOK_SECRET }}"}'

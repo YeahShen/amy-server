@@ -9,6 +9,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.bind.annotation.RestController;
+import site.ashenstation.amyserver.annotation.rest.AnonymousGetMapping;
 import site.ashenstation.amyserver.utils.SpringBeanHolder;
 
 @SpringBootApplication
@@ -16,6 +18,7 @@ import site.ashenstation.amyserver.utils.SpringBeanHolder;
 @MapperScan("site.ashenstation.amyserver.mapper")
 @Slf4j
 @EnableAsync
+@RestController
 public class AppRun {
 
     public static void main(String[] args) {
@@ -31,5 +34,11 @@ public class AppRun {
     @Bean
     public SpringBeanHolder springContextHolder() {
         return new SpringBeanHolder();
+    }
+
+
+    @AnonymousGetMapping
+    public String index() {
+        return "AMY STATION @";
     }
 }
