@@ -64,7 +64,7 @@ pom 默认 `skipTests=true`，需要测试时显式开启（注意：仓库唯�
 docker build -t amy-server .         # Dockerfile 拷贝 target/*.jar，需先打包
 ```
 
-代码推送到 `master` 后由 GitHub Actions 自动完成打包与镜像发布（见下「CI」节）。
+代码以 `v*` 格式（如 `v1.0`）打 tag 并推送后，由 GitHub Actions 自动打包、发布镜像并触发服务器部署（见下「CI」节）。
 
 ## 配置说明
 
@@ -207,12 +207,13 @@ src/main/java/site/ashenstation/amyserver
 ## Docker 部署与 CI
 
 - **Dockerfile**：基础镜像 `registry.cn-hangzhou.aliyuncs.com/ashen_station/java-ffmpeg:21-jre-alpine-3.21`（含 ffmpeg），拷贝 `target/*.jar`，以 `prod` profile 启动，工作目录 `/amy`（预建各静态目录），开 5006 调试端口
-- **GitHub Actions**（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）：`master` 推送 / PR / 手动触发
-  1. JDK 21 + Maven 依赖缓存，`./mvnw -DskipTests package`
+- **GitHub Actions**（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）：推送 `v*` tag（如 `v1.0`）触发——master 常规推送与 PR 不触发
+  1. JDK 21 + Maven 依赖缓存；`versions:set` 将 jar 版本设为 tag 名，随后 `./mvnw -DskipTests package`
   2. 登录阿里云 ACR → buildx 构建（`type=gha` 分层缓存）
-  3. `master` 推送发布 `ashen_station/amy-server:latest` + `:<commit sha>` 双 tag；PR 仅构建验证不推送
+  3. 发布 `ashen_station/amy-server:latest` + `:<tag名>` 双 tag
+  4. 请求部署 Webhook 触发服务器更新，按成败发送邮件通知
 
-仓库需配置 Actions secrets：`ALIYUN_ACR_USERNAME` / `ALIYUN_ACR_PASSWORD`（缺失时 `master` 推送会在校验步骤显式失败）。
+仓库需配置 Actions secrets：`ALIYUN_ACR_USERNAME` / `ALIYUN_ACR_PASSWORD` / `WEBHOOK_SECRET` / `MAIL_USERNAME` / `MAIL_PASSWORD`（缺失时对应步骤会失败）。
 
 ## 已知问题 / 待办
 

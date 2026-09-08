@@ -2,10 +2,8 @@ name: 构建发布 amy-server Docker 镜像
 
 on:
   push:
-    branches: [ master ]        # master 推送: 打包 → 构建 → 推送 ACR
-  pull_request:
-    branches: [ master ]        # PR: 仅构建验证，不推送
-  workflow_dispatch:            # 支持手动触发补发镜像
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 concurrency:
   # 同一分支/PR 的重复运行只保留最新，避免连推时排队构建旧代码
@@ -28,6 +26,11 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+
+      # 发布版本取当前推送的 tag 名（push tags 事件下 github.event.release 为 null，
+      # 只能用 github.ref_name，如 refs/tags/v1.0 → v1.0）
+      - name: Set version from Git tag
+        run: mvn versions:set -DnewVersion=${{ github.ref_name }} -DgenerateBackupPoms
 
       # mvnw 以 100644 入库，Linux runner 上需补执行位；
       # 测试保持跳过（与 pom 默认一致，CI 无 DB/Redis 时 @SpringBootTest 无法启动）
@@ -78,7 +81,7 @@ jobs:
           sbom: false
           tags: |
             registry.cn-hangzhou.aliyuncs.com/ashen_station/amy-server:latest
-            registry.cn-hangzhou.aliyuncs.com/ashen_station/amy-server:${{ github.sha }}
+            registry.cn-hangzhou.aliyuncs.com/ashen_station/amy-server:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
