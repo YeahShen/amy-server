@@ -37,7 +37,7 @@ public class AppRun {
     }
 
 
-    @AnonymousGetMapping
+    @AnonymousGetMapping("/")
     public String index() {
         return "AMY STATION @";
     }
