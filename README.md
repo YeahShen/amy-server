@@ -208,7 +208,7 @@ src/main/java/site/ashenstation/amyserver
 
 - **Dockerfile**：基础镜像 `registry.cn-hangzhou.aliyuncs.com/ashen_station/java-ffmpeg:21-jre-alpine-3.21`（含 ffmpeg），拷贝 `target/*.jar`，以 `prod` profile 启动，工作目录 `/amy`（预建各静态目录），开 5006 调试端口
 - **GitHub Actions**（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）：推送 `v*` tag（如 `v1.0`）触发——master 常规推送与 PR 不触发
-  1. JDK 21 + Maven 依赖缓存；`versions:set` 将 jar 版本设为 tag 名，随后 `./mvnw -DskipTests package`
+  1. JDK 21 + Maven 依赖缓存；`versions:set` 将 jar 版本设为 tag 名去 `v`（`v1.0` → `1.0`），随后 `./mvnw -DskipTests package`
   2. 登录阿里云 ACR → buildx 构建（`type=gha` 分层缓存）
   3. 发布 `ashen_station/amy-server:latest` + `:<tag名>` 双 tag
   4. 请求部署 Webhook 触发服务器更新，按成败发送邮件通知

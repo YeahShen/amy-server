@@ -28,9 +28,10 @@ jobs:
           cache: maven
 
       # 发布版本取当前推送的 tag 名（push tags 事件下 github.event.release 为 null，
-      # 只能用 github.ref_name，如 refs/tags/v1.0 → v1.0）
+      # 只能用 github.ref_name，如 refs/tags/v1.0 → v1.0）；
+      # jar 版本去掉 v 前缀（0.1.0），镜像 tag 保持 v1.0 形态（见下方 tags 配置）
       - name: Set version from Git tag
-        run: mvn versions:set -DnewVersion=${{ github.ref_name }} -DgenerateBackupPoms
+        run: mvn versions:set -DnewVersion=${GITHUB_REF_NAME#v} -DgenerateBackupPoms
 
       # mvnw 以 100644 入库，Linux runner 上需补执行位；
       # 测试保持跳过（与 pom 默认一致，CI 无 DB/Redis 时 @SpringBootTest 无法启动）
