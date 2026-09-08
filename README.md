@@ -207,7 +207,7 @@ src/main/java/site/ashenstation/amyserver
 ## Docker 部署与 CI
 
 - **Dockerfile**：基础镜像 `registry.cn-hangzhou.aliyuncs.com/ashen_station/java-ffmpeg:21-jre-alpine-3.21`（含 ffmpeg），拷贝 `target/*.jar`，以 `prod` profile 启动，工作目录 `/amy`（预建各静态目录），开 5006 调试端口
-- **GitHub Actions**（[.github/workflows/docker-image.yml](.github/workflows/docker-image.yml)）：`master` 推送 / PR / 手动触发
+- **GitHub Actions**（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）：`master` 推送 / PR / 手动触发
   1. JDK 21 + Maven 依赖缓存，`./mvnw -DskipTests package`
   2. 登录阿里云 ACR → buildx 构建（`type=gha` 分层缓存）
   3. `master` 推送发布 `ashen_station/amy-server:latest` + `:<commit sha>` 双 tag；PR 仅构建验证不推送

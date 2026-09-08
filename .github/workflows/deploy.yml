@@ -88,3 +88,50 @@ jobs:
           url: https://hooks.ashen-station.top/hooks/deploy-my-app
           method: 'GET'
           customHeaders: '{"X-Webhook-Secret": "${{ secrets.WEBHOOK_SECRET }}"}'
+
+      # -------------------- 2. 部署成功时发送邮件 --------------------
+      - name: 发送部署成功邮件通知
+        if: success() # 仅当前面步骤全部成功时执行
+        uses: dawidd6/action-send-mail@v3
+        with:
+          # SMTP 服务器配置（以 QQ 邮箱为例，常用服务器列表见下方）
+          server_address: smtp.163.com
+          server_port: 465
+          secure: true
+          # 认证信息（强烈建议存放在 GitHub Secrets 中）
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }} # 注意：QQ/163 邮箱此处填授权码，非登录密码
+          
+          # 邮件内容配置
+          subject: "🎉 【部署成功】服务已更新 - ${{ github.repository }}"
+          to: 707978562@qq.com # 接收通知的邮箱，多邮箱用逗号隔开
+          from: "GitHub CI/CD Bot <${{ secrets.MAIL_USERNAME }}>"
+          html_body: |
+            <h3>🚀 项目部署成功</h3>
+            <p><strong>项目仓库:</strong> ${{ github.repository }}</p>
+            <p><strong>触发分支:</strong> ${{ github.ref_name }}</p>
+            <p><strong>提交信息:</strong> ${{ github.event.head_commit.message }}</p>
+            <p><strong>提交 Hash:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a></p>
+            <p><strong>触发人员:</strong> ${{ github.actor }}</p>
+            <hr>
+            <p><i>本邮件由 GitHub Actions 自动化流水线自动发送，请勿直接回复。</i></p>
+
+      # -------------------- 3. 部署失败时发送告警邮件 --------------------
+      - name: 发送部署失败告警邮件
+        if: failure() # 仅当前面有步骤失败时执行
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.163.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "❌ 【部署失败】服务更新异常 - ${{ github.repository }}"
+          to: 707978562@qq.com
+          from: "GitHub CI/CD Bot <${{ secrets.MAIL_USERNAME }}>"
+          html_body: |
+            <h3>⚠️ 项目部署失败，请及时排查！</h3>
+            <p><strong>项目仓库:</strong> ${{ github.repository }}</p>
+            <p><strong>触发分支:</strong> ${{ github.ref_name }}</p>
+            <p><strong>提交 Hash:</strong> ${{ github.sha }}</p>
+            <p><strong>排查链接:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">查看详细构建日志</a></p>
