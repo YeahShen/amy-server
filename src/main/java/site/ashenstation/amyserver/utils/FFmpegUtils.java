@@ -22,11 +22,6 @@ import java.util.List;
 public class FFmpegUtils {
     private final FFmpegProperties fFmpegProperties;
 
-    public final static Integer _4K = 2160;
-    public final static Integer _2K = 1440;
-    public final static Integer _1080P = 1080;
-    public final static Integer _720P = 720;
-
     public FFmpeg getFFmpeg() throws IOException {
         return new FFmpeg(fFmpegProperties.getFfmpegExecutorPath());
     }
@@ -78,7 +73,6 @@ public class FFmpegUtils {
      * @return 无视频流时返回 null
      */
     public FFmpegUtils.VideoResolution getVideoResolution(String videoPath) throws IOException {
-
         FFmpegProbeResult probe = getFFprobe().probe(videoPath);
         for (FFmpegStream stream : probe.getStreams()) {
             if (stream.codec_type == FFmpegStream.CodecType.VIDEO) {
@@ -86,6 +80,30 @@ public class FFmpegUtils {
             }
         }
         return null;
+    }
+
+    public void conversionToMp4(String source, String target, FFmpegExecutor fFmpegExecutor) {
+        String args = "-y -c:v " + fFmpegProperties.getVideoEncoder() + " -preset medium -crf 10 -c:a aac -b:a 320k";
+
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(source)
+                .addOutput(target)
+                .addExtraArgs(args.trim().split("\\s+"))
+                .done();
+
+        fFmpegExecutor.createJob(builder).run();
+    }
+
+    public void conversionToTs(String source, String target, FFmpegExecutor fFmpegExecutor) {
+        String args = "-y -vcodec copy -acodec copy";
+
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(source)
+                .addOutput(target)
+                .addExtraArgs(args.trim().split("\\s+"))
+                .done();
+
+        fFmpegExecutor.createJob(builder).run();
     }
 
 
@@ -124,7 +142,6 @@ public class FFmpegUtils {
     }
 
     public record ConversionPlan(List<String> command, List<String> label) {
-
     }
 
     /**

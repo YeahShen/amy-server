@@ -50,7 +50,5 @@ static-resource-directory-properties:
 ffmpeg:
   ffmpeg-executor-path: D:\workspace\resource\ffmpeg-n8.0-latest-win64-gpl-8.0\bin\ffmpeg.exe
   ffprobe-executor-path: D:\workspace\resource\ffmpeg-n8.0-latest-win64-gpl-8.0\bin\ffprobe.exe
-  conversion-to-mp4-args: "-y -c:v h264_amf -preset medium -crf 10 -c:a aac -b:a 320k"
-  conversion-to-ts-args: "-y -vcodec copy -acodec copy"
   video-encoder: h264_amf
   audio-encoder: aac

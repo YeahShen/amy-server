@@ -9,6 +9,7 @@ import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import site.ashenstation.amyserver.config.exception.BadRequestException;
 import site.ashenstation.amyserver.dto.*;
@@ -19,10 +20,7 @@ import site.ashenstation.amyserver.enums.VideoStatus;
 import site.ashenstation.amyserver.mapper.*;
 import site.ashenstation.amyserver.property.FFmpegProperties;
 import site.ashenstation.amyserver.property.StaticResourceDirectoryProperties;
-import site.ashenstation.amyserver.utils.FFmpegUtils;
-import site.ashenstation.amyserver.utils.FileUtils;
-import site.ashenstation.amyserver.utils.RedisUtils;
-import site.ashenstation.amyserver.utils.SecurityUtils;
+import site.ashenstation.amyserver.utils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +47,7 @@ public class VideoService {
     private final FFmpegUtils fFmpegUtils;
     private final FFmpegProperties fFmpegProperties;
     private final RedisUtils redisUtils;
+    private final AesEncryptMapper aesEncryptMapper;
 
     private final SseService sseService;
 
@@ -119,7 +119,7 @@ public class VideoService {
         return id;
     }
 
-
+    @Transactional(rollbackFor = Exception.class)
     public void processVideoUploadNext(UploadProcessorKeyDto uploadProcessorKeyDto, CreateVideoDto data) {
         Path uploadDir = Paths.get(staticResourceDirectoryProperties.getUploadTempDirectory(), uploadProcessorKeyDto.getTaskId());
 
@@ -168,13 +168,13 @@ public class VideoService {
             File mp4File;
             if (!ext.equals(".mp4")) {
                 mp4File = new File(destRootFile, fileMainName + ".mp4");
-                fFmpegUtils.conversion(destFile.getAbsolutePath(), mp4File.getAbsolutePath(), fFmpegProperties.getConversionToMp4Args(), fFmpegExecutor);
+                fFmpegUtils.conversionToMp4(destFile.getAbsolutePath(), mp4File.getAbsolutePath(), fFmpegExecutor);
             } else {
                 mp4File = destFile;
             }
 
             File tsFile = new File(destRootFile, fileMainName + ".ts");
-            fFmpegUtils.conversion(mp4File.getAbsolutePath(), tsFile.getAbsolutePath(), fFmpegProperties.getConversionToTsArgs(), fFmpegExecutor);
+            fFmpegUtils.conversionToTs(mp4File.getAbsolutePath(), tsFile.getAbsolutePath(), fFmpegExecutor);
 
             FFmpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(destFile.getAbsolutePath());
 
@@ -209,6 +209,15 @@ public class VideoService {
                 FileUtils.del(mp4File);
             }
 
+            String aesKey = AesUtil.generateKey();
+            AesEncrypt aesEncrypt = new AesEncrypt();
+            aesEncrypt.setEncryptKey(aesKey);
+            aesEncrypt.setResourceId(data.getId());
+            aesEncrypt.setCreateAt(new Date());
+
+            aesEncryptMapper.insert(aesEncrypt);
+
+
             FileUtils.del(tsFile);
 
             redisUtils.hdel("upload-task:video", data.getId());
@@ -222,7 +231,7 @@ public class VideoService {
                 put("artist", data.getArtist());
             }}));
 
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }

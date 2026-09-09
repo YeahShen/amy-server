@@ -11,9 +11,6 @@ public class FFmpegProperties {
     private String ffmpegExecutorPath;
     private String ffprobeExecutorPath;
 
-    private String conversionToMp4Args;
-    private String conversionToTsArgs;
-
     private String videoEncoder;
     private String audioEncoder;
 }
