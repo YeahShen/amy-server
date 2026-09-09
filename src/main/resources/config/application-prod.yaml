@@ -49,5 +49,5 @@ ffmpeg:
   ffprobe-executor-path: ffprobe
   ffmpeg-executor-path: ffmpeg
   #  "libx264", "h264_nvenc", "h264_amf", "h264_qsv"
-  video-encoder: h264_qsv
+  video-encoder: libx264
   audio-encoder: aac
