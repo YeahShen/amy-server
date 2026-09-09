@@ -15,14 +15,7 @@ public class AesUtil {
     private static final int IV_SIZE = 16; // 128 bit
     private static final int AES_KEY_SIZE = 128;
 
-    /**
-     * 生成 AES 密钥
-     *
-     * @param keySize 128, 192 或 256
-     */
-    /**
-     * 生成随机 AES 密钥（128位）
-     */
+
     public static String generateKey() throws NoSuchAlgorithmException {
         KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
         keyGen.init(AES_KEY_SIZE, new SecureRandom());
@@ -70,32 +63,6 @@ public class AesUtil {
 
         return cipher.doFinal(cipherText);
     }
-
-    public static void main(String[] args) throws Exception {
-        File file = new File("C:\\Users\\ashen\\Desktop\\ic_9-3.txt");
-        File tfile = new File("C:\\Users\\ashen\\Desktop\\ic_9-3.enc");
-
-        String key = generateKey();
-
-        System.out.println("key:" + key);
-
-//        try (FileInputStream fin = new FileInputStream(file); FileOutputStream fout = new FileOutputStream(tfile)) {
-//            byte[] bytes = fin.readAllBytes();
-//            byte[] encrypt = encrypt(bytes, key);
-//
-//            fout.write(encrypt);
-//        }
-//
-//        try (FileInputStream fin = new FileInputStream(tfile); FileOutputStream fout = new FileOutputStream("C:\\Users\\ashen\\Desktop\\ic_9-3.enc.txt")) {
-//            byte[] bytes = fin.readAllBytes();
-//
-//            byte[] decrypt = decrypt(bytes, "3Jk4tiBhmKGiDKrhyCi/3g==");
-//
-//            fout.write(decrypt);
-//        }
-
-    }
-
 }
 
 
