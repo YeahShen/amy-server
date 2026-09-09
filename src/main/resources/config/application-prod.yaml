@@ -48,7 +48,7 @@ static-resource-directory-properties:
 ffmpeg:
   ffprobe-executor-path: ffprobe
   ffmpeg-executor-path: ffmpeg
-  conversion-to-mp4-args: "-y -c:v h264_qsv -preset medium -crf 10 -c:a aac -b:a 320k"
+  conversion-to-mp4-args: "-y -c:v libx264 -preset medium -crf 10 -c:a aac -b:a 320k"
   conversion-to-ts-args: "-y -vcodec copy -acodec copy"
-  video-encoder: h264_qsv
+  video-encoder: libx264
   audio-encoder: aac
