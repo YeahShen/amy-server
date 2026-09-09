@@ -1,4 +1,4 @@
-FROM registry.cn-hangzhou.aliyuncs.com/ashen_station/java-ffmpeg:21-jre-alpine-3.21
+FROM registry.cn-hangzhou.aliyuncs.com/ashen_station/ffmpeg-openjdk21:latest
 LABEL authors="ashen"
 
 USER root
