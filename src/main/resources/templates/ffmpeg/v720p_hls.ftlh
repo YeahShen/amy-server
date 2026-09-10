@@ -1,0 +1,11 @@
+-y \
+-init_hw_device qsv=hw -filter_hw_device hw \
+-map 0:v:0 -map 0:a:0 \
+-c:v ${videoEncoder} -preset veryfast \
+-vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1,format=nv12,hwupload=extra_hw_frames=64" \
+-b:v 2500k -maxrate 2675k -bufsize 3750k -g 180 -keyint_min 180 \
+-c:a ${audioEncoder} -b:a 128k -ac 2 \
+-sc_threshold 0 \
+-f hls -hls_time 6 -hls_playlist_type vod -hls_list_size 0 \
+-hls_flags independent_segments \
+-hls_segment_filename "v720p/segment_%03d.ts"

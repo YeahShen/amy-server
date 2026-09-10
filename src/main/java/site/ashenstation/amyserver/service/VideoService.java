@@ -48,6 +48,7 @@ public class VideoService {
     private final FFmpegProperties fFmpegProperties;
     private final RedisUtils redisUtils;
     private final AesEncryptMapper aesEncryptMapper;
+    private final TemplateRender templateRender;
 
     private final SseService sseService;
 
@@ -183,19 +184,42 @@ public class VideoService {
             List<String> label = conversionPlan.label();
 
             // 预创建各清晰度目录：目录名须与 -var_stream_map 的 name（v4k/v2k/...）一致，%v 会被替换成该名字
+
+            List<String> commands = new ArrayList<>();
+
+            HashMap<String, Object> renderArgsMap = new HashMap<>();
+            renderArgsMap.put("videoEncoder", fFmpegProperties.getVideoEncoder());
+            renderArgsMap.put("audioEncoder", fFmpegProperties.getAudioEncoder());
+
             for (String type : label) {
                 FileUtils.mkdir(new File(destRootFile, type));
+
+                commands.add(templateRender.render("ffmpeg/" + type + "_hls.ftlh", renderArgsMap).replaceAll("\\\\[ \\t]*\\r?\\n", " ")
+                        .replaceAll("\\s+", " ")
+                        .trim());
             }
 
-            fFmpegUtils.conversion(tsFile.getAbsolutePath(), "%v/index.m3u8", conversionPlan.command(), fFmpegExecutor, new ProgressListener() {
-                final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
+//            fFmpegUtils.conversion(tsFile.getAbsolutePath(), "%v/index.m3u8", conversionPlan.command(), fFmpegExecutor, new ProgressListener() {
+//                final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
+//
+//                @Override
+//                public void progress(Progress progress) {
+//                    double percentage = progress.out_time_ns / duration_ns;
+//                    System.out.println(percentage);
+//                }
+//            });
 
-                @Override
-                public void progress(Progress progress) {
-                    double percentage = progress.out_time_ns / duration_ns;
-                    System.out.println(percentage);
-                }
-            });
+            for (String command : commands) {
+                fFmpegUtils.conversion(tsFile.getAbsolutePath(), "%v/index.m3u8", command, fFmpegExecutor, new ProgressListener() {
+                    final double duration_ns = duration * TimeUnit.SECONDS.toNanos(1);
+
+                    @Override
+                    public void progress(Progress progress) {
+                        double percentage = progress.out_time_ns / duration_ns;
+                        System.out.println(percentage);
+                    }
+                });
+            }
 
             Video video1 = UpdateEntity.of(Video.class, data.getId());
             video1.setStatus(VideoStatus.NORMAL);
@@ -233,6 +257,8 @@ public class VideoService {
 
         } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

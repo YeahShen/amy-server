@@ -1,0 +1,11 @@
+-y \
+-init_hw_device qsv=hw -filter_hw_device hw \
+-map 0:v:0 -map 0:a:0 \
+-c:v ${videoEncoder} -preset veryfast \
+-vf "scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2,setsar=1,format=nv12,hwupload=extra_hw_frames=64" \
+-b:v 10000k -maxrate 10700k -bufsize 15000k \
+-g 180 -keyint_min 180 -sc_threshold 0 \
+-c:a ${audioEncoder} -b:a 160k -ac 2 \
+-f hls -hls_time 6 -hls_playlist_type vod -hls_list_size 0 \
+-hls_flags independent_segments \
+-hls_segment_filename "v1440p/segment_%03d.ts"

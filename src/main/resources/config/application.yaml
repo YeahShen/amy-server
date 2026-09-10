@@ -7,10 +7,11 @@ spring:
       max-request-size: 55MB
 
   freemarker:
-    cache: false
     charset: UTF-8
     suffix: .ftlh
     template-loader-path: classpath:/templates/
+    cache: false   # 开发阶段关闭缓存
+    check-template-location: false  # 非视图场景可关闭模板位置检查，避免无谓警告
 
 server:
   port: 9999
