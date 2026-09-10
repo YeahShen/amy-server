@@ -8,4 +8,4 @@
 -c:a ${audioEncoder} -b:a 160k -ac 2 \
 -f hls -hls_time 6 -hls_playlist_type vod -hls_list_size 0 \
 -hls_flags independent_segments \
--hls_segment_filename "v1440p/segment_%03d.ts"
+-hls_segment_filename "v2k/segment_%03d.ts"
