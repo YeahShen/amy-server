@@ -11,6 +11,7 @@
     <groupId>site.ashenstation</groupId>
     <artifactId>amy-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <name>amy-server</name>
     <description>amy-server</description>
     <url/>
@@ -20,6 +21,10 @@
     <developers>
         <developer/>
     </developers>
+    <modules>
+        <module>boot</module>
+        <module>common</module>
+    </modules>
     <scm>
         <connection/>
         <developerConnection/>
