@@ -4,7 +4,7 @@ import lombok.Data;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import site.ashenstation.infrastructure.dao.AppUserMapper;
+import site.ashenstation.model.entity.AppUser;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @Data
 public class JwtAppUserDto implements UserDetails, Serializable {
-    private AppUserMapper appUserMapper;
+    private AppUser AppUser;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
