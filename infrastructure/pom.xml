@@ -7,10 +7,10 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>boot</artifactId>
+    <artifactId>infrastructure</artifactId>
     <packaging>jar</packaging>
 
-    <name>boot</name>
+    <name>infrastructure</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -26,13 +26,7 @@
 
         <dependency>
             <groupId>site.ashenstation</groupId>
-            <artifactId>infrastructure</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>site.ashenstation</groupId>
-            <artifactId>system</artifactId>
+            <artifactId>common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
