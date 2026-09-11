@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -41,9 +42,9 @@ public class SecurityUtils {
     /**
      * 获取当前登录的用户
      *
-     * @return UserDetails
+     * @return UserDetails，用户不存在返回 null
      */
-    public static UserDetails getCurrentUser() {
+    public static @Nullable UserDetails getCurrentUser() {
         UserDetailsService userDetailsService = SpringBeanHolder.getBean(UserDetailsService.class);
         return userDetailsService.loadUserByUsername(getCurrentUsername());
     }

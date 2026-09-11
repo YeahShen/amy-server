@@ -6,10 +6,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import site.ashenstation.utils.SpringBeanHolder;
 
 @SpringBootApplication
 @EnableScheduling
@@ -32,5 +34,10 @@ public class Booter {
     @GetMapping("/")
     public String index() {
         return "AMY STATION @";
+    }
+
+    @Bean
+    public SpringBeanHolder springContextHolder() {
+        return new SpringBeanHolder();
     }
 }
