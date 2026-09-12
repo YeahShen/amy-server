@@ -19,10 +19,10 @@ spring:
           max-wait: 1000ms
 
   rabbitmq:
-    host: rabbitmq      # 服务器地址，默认 localhost
-    port: 5672           # 端口，默认 5672
-    username: amy      # 用户名，默认 guest
-    password: amy      # 密码，默认 guest
+    host: ${MQ_HOST}      # 服务器地址，默认 localhost
+    port: ${MQ_PORT}           # 端口，默认 5672
+    username: ${MQ_USERNAME}      # 用户名，默认 guest
+    password: ${MQ_PASSWORD}      # 密码，默认 guest
     virtual-host: /      # 虚拟主机，默认为 /
     publisher-confirm-type: correlated  # 开启发送方确认
     publisher-returns: true            # 开启发送方回退
