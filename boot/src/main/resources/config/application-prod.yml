@@ -51,3 +51,8 @@ ffmpeg:
   #  "libx264", "h264_nvenc", "h264_amf", "h264_qsv"
   video-encoder: libx264
   audio-encoder: aac
+  # 硬件设备参数（留空 = 纯软编）；切 Intel QSV 硬编时改为 -init_hw_device qsv=hw -filter_hw_device hw
+  hw-args: ""
+  # 编码器专属参数：h264_qsv 用 -preset veryfast，libx264 用 -preset veryfast
+  video-encoder-args: -preset veryfast
+  audio-encoder-args: ""

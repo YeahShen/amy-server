@@ -26,6 +26,8 @@ public class StaticResourceDirectoryProperties {
 
     private String uploadTempDirectory;
 
+    private String videoTempDirectory;
+
 
     @Data
     public static class VideoRootProperties {

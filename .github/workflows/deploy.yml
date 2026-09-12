@@ -68,7 +68,8 @@ jobs:
           username: ${{ secrets.ALIYUN_ACR_USERNAME }}
           password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
-      # Dockerfile 依赖 target/*.jar（即上方 Maven 产物），注意不能把 target 加进 .dockerignore
+      # Dockerfile 依赖 boot/target/*.jar（多模块工程中唯一可执行 jar，即上方 Maven 产物），
+      # 注意不能把 boot/target 加进 .dockerignore
       # PR 只构建不推送；master 推送 / 手动触发推 latest + 完整 commit sha 两个 tag，便于回滚指定版本
       # type=gha 复用上次构建的镜像层，二次构建免重复下载/执行耗时步骤
       # provenance/sbom: build-push-action v6 默认生成来源证明与 SBOM 制品（OCI artifact），

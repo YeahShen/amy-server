@@ -1,0 +1,1 @@
+-c:v ${videoEncoder} -c:a copy

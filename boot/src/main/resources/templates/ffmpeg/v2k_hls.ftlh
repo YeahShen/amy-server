@@ -1,0 +1,11 @@
+-y
+${hwArgs}
+-map 0:v:0 -map 0:a:0
+-c:v ${videoEncoder} ${videoEncoderArgs}
+-vf "scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2,setsar=1,format=nv12,hwupload"
+-b:v 10000k -maxrate 10700k -bufsize 15000k -g 180 -keyint_min 180
+-c:a ${audioEncoder} ${audioEncoderArgs} -b:a 160k -ac 2
+-sc_threshold 0
+-f hls -hls_time 6 -hls_playlist_type vod -hls_list_size 0
+-hls_flags independent_segments
+-hls_segment_filename "v2k/segment_%03d.ts"

@@ -1,3 +1,16 @@
+spring:
+  application:
+    name: amy-server
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+  freemarker:
+    settings:
+      # FreeMarker 2.3.34 起才把 record 的访问器当属性暴露（模板里 ${v.bandwidth}），
+      # 而 Spring 用的 Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS 是 2.3.0，必须显式抬高
+      incompatible_improvements: "2.3.34"
+
 server:
   port: 9999
 

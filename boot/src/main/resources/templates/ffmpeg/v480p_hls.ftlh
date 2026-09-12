@@ -1,0 +1,11 @@
+-y
+${hwArgs}
+-map 0:v:0 -map 0:a:0
+-c:v ${videoEncoder} ${videoEncoderArgs}
+-vf "scale=848:480:force_original_aspect_ratio=decrease,pad=848:480:(ow-iw)/2:(oh-ih)/2,setsar=1,format=nv12,hwupload"
+-b:v 1200k -maxrate 1284k -bufsize 1800k -g 180 -keyint_min 180
+-c:a ${audioEncoder} ${audioEncoderArgs} -b:a 128k -ac 2
+-sc_threshold 0
+-f hls -hls_time 6 -hls_playlist_type vod -hls_list_size 0
+-hls_flags independent_segments
+-hls_segment_filename "v480p/segment_%03d.ts"

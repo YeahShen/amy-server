@@ -97,6 +97,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.mybatis-flex</groupId>
             <artifactId>mybatis-flex-spring-boot4-starter</artifactId>
             <version>1.11.8</version>
@@ -182,6 +187,15 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!--
+                  仅 boot 模块需要打成可执行 fat jar；若在此处（以及父 pom 的插件管理）不关闭，
+                  repackage 会作用于 common/model/infrastructure/system 等库模块，把它们也裹成
+                  BOOT-INF/classes 布局，导致下游模块编译时读不到类（package 阶段解析的是 jar，
+                  不是 target/classes）。boot 模块单独声明该插件以重新开启。
+                -->
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

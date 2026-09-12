@@ -1,5 +1,6 @@
 package site.ashenstation.modules.security.service;
 
+import io.jsonwebtoken.lang.Arrays;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -7,6 +8,7 @@ import site.ashenstation.modules.security.vo.NotificationVO;
 import site.ashenstation.utils.SecurityUtils;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -56,16 +58,21 @@ public class SseService {
     }
 
     public void SendMessage(String id, NotificationVO message) {
-        SseEmitter emitter = ONLINE_SESSIONS.get(id);
-        try {
-            // 构建并发送事件，可以设置id、事件名等
-            emitter.send(SseEmitter.event()
-                    .id(String.valueOf(System.currentTimeMillis()))
-                    .name("message")
-                    .data(message));
-        } catch (IOException e) {
-            ONLINE_SESSIONS.remove(id);
-        }
+
+        ONLINE_SESSIONS.keySet().forEach(key -> {
+            List<String> list = Arrays.asList(key.split(":"));
+            String userId = list.getFirst();
+            if (userId.equals(id)) {
+                try {
+                    ONLINE_SESSIONS.get(key).send(SseEmitter.event()
+                            .id(String.valueOf(System.currentTimeMillis()))
+                            .name("message")
+                            .data(message));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     /**

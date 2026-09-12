@@ -7,6 +7,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,6 +38,12 @@ public class TokenFilter extends GenericFilterBean {
         String token = tokenProvider.resolveToken(httpServletRequest);
 
         if (StringUtils.hasText(token)) {
+            boolean tokenExpired = tokenProvider.isTokenExpired(token);
+
+            if (tokenExpired) {
+                throw new BadRequestException("token expired");
+            }
+
             Claims claims = tokenProvider.getClaims(token);
             String userId = claims.get(Constants.JWT_CLAIM_USER_ID, String.class);
 
