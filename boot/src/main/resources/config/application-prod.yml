@@ -18,6 +18,20 @@ spring:
           min-idle: 2
           max-wait: 1000ms
 
+  rabbitmq:
+    host: 127.0.0.1      # 服务器地址，默认 localhost
+    port: 5672           # 端口，默认 5672
+    username: amy      # 用户名，默认 guest
+    password: amy      # 密码，默认 guest
+    virtual-host: /      # 虚拟主机，默认为 /
+    publisher-confirm-type: correlated  # 开启发送方确认
+    publisher-returns: true            # 开启发送方回退
+    listener:
+      simple:
+        acknowledge-mode: manual       # 手动确认，收到消息后需显式 ack
+        concurrency: 3                 # 并发消费者数量
+        max-concurrency: 10            # 最大并发数
+
 
 jwt:
   # 必须使用最少88位的Base64对该令牌进行编码
@@ -44,15 +58,21 @@ static-resource-directory-properties:
   upload-temp-directory: /amy/temp
   poster-path-prefix: /resource/poster
   poster-directory: /amy/poster
+  video-temp-directory: /amy/video_temp
 
 ffmpeg:
   ffprobe-executor-path: ffprobe
   ffmpeg-executor-path: ffmpeg
   #  "libx264", "h264_nvenc", "h264_amf", "h264_qsv"
-  video-encoder: libx264
+  video-encoder: h264_qsv
   audio-encoder: aac
   # 硬件设备参数（留空 = 纯软编）；切 Intel QSV 硬编时改为 -init_hw_device qsv=hw -filter_hw_device hw
-  hw-args: ""
+  hw-args: "-init_hw_device qsv=hw -filter_hw_device hw"
   # 编码器专属参数：h264_qsv 用 -preset veryfast，libx264 用 -preset veryfast
   video-encoder-args: -preset veryfast
   audio-encoder-args: ""
+  do-not-re-encoding-format:
+    - 'h264'
+    - 'h265'
+    - 'av1'
+    - 'vp9'
