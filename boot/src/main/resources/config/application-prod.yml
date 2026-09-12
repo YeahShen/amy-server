@@ -19,7 +19,7 @@ spring:
           max-wait: 1000ms
 
   rabbitmq:
-    host: 127.0.0.1      # 服务器地址，默认 localhost
+    host: rabbitmq      # 服务器地址，默认 localhost
     port: 5672           # 端口，默认 5672
     username: amy      # 用户名，默认 guest
     password: amy      # 密码，默认 guest

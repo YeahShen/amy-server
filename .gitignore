@@ -34,3 +34,5 @@ build/
 
 ### 运行时 ###
 *.pid
+
+compose.yml
