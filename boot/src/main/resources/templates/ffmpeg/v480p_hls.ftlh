@@ -1,6 +1,6 @@
 -y
 ${hwArgs}
--map 0:v:0 -map 0:a:0
+-map 0:v:0 -map 0:a:0?
 -c:v ${videoEncoder} ${videoEncoderArgs}
 -vf "scale=848:480:force_original_aspect_ratio=decrease,pad=848:480:(ow-iw)/2:(oh-ih)/2,setsar=1,format=nv12,hwupload"
 -b:v 1200k -maxrate 1284k -bufsize 1800k -g 180 -keyint_min 180
