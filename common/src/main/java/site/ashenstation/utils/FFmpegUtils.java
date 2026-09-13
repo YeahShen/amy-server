@@ -168,7 +168,7 @@ public class FFmpegUtils {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(source)
                 .addOutput(target)
-                .addExtraArgs(args.trim().split("\\s+"))
+                .addExtraArgs(splitArgs(args))
                 .done();
 
         fFmpegExecutor.createJob(builder, progressListener).run();
@@ -178,10 +178,48 @@ public class FFmpegUtils {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(source)
                 .addOutput(target)
-                .addExtraArgs(args.trim().split("\\s+"))
+                .addExtraArgs(splitArgs(args))
                 .done();
 
         fFmpegExecutor.createJob(builder).run();
+    }
+
+    /**
+     * 把模板渲染出的参数串切成 argv。
+     * <p>
+     * 模板里的参数是照着命令行习惯写的（如 {@code -vf "scale=..."}、{@code -hls_segment_filename "v480p/segment_%03d.ts"}），
+     * 但 net.bramp 直接经 ProcessBuilder 传参、不经过 shell，引号会原样进入参数值并被 ffmpeg 当成内容
+     * （滤镜图解析器报 "Error parsing filterchain"），故此处剥掉成对的双/单引号、引号内的空白不切分。
+     */
+    private static String[] splitArgs(String args) {
+        List<String> argv = new ArrayList<>();
+        StringBuilder token = new StringBuilder();
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        boolean started = false;
+
+        for (char c : args.trim().toCharArray()) {
+            if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                started = true;
+            } else if (c == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                started = true;
+            } else if (Character.isWhitespace(c) && !inSingleQuote && !inDoubleQuote) {
+                if (started) {
+                    argv.add(token.toString());
+                    token.setLength(0);
+                    started = false;
+                }
+            } else {
+                token.append(c);
+                started = true;
+            }
+        }
+        if (started) {
+            argv.add(token.toString());
+        }
+        return argv.toArray(new String[0]);
     }
 
 
