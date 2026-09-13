@@ -24,10 +24,7 @@ import site.ashenstation.modules.media.dto.UploadProcessorKeyDto;
 import site.ashenstation.modules.media.dto.UploadTaskDto;
 import site.ashenstation.modules.security.service.SseService;
 import site.ashenstation.modules.security.vo.NotificationVO;
-import site.ashenstation.utils.FFmpegUtils;
-import site.ashenstation.utils.FileUtils;
-import site.ashenstation.utils.SecurityUtils;
-import site.ashenstation.utils.TemplateRenderUtils;
+import site.ashenstation.utils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +55,7 @@ public class VideoService {
     private final FFmpegUtils fFmpegUtils;
     private final SseService sseService;
     private final VideoConversionService videoConversionService;
+    private final ResourceAesEncryptMapper resourceAesEncryptMapper;
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
 
@@ -253,7 +251,12 @@ public class VideoService {
                 put("artist", dto.getId());
             }}));
 
+            String key = AesUtils.generateKey();
+
             channel.basicAck(1L, false);
+            ResourceAesEncrypt resourceAesEncrypt = new ResourceAesEncrypt();
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
