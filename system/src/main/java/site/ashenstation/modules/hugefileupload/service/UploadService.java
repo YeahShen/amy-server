@@ -118,7 +118,7 @@ public class UploadService {
                 String fileExt = data.getFileExt();
                 String fileName = "_" + fileExt + ".temp";
 
-                File tempFileDir = new File(staticResourceDirectoryProperties.getUploadTempDirectory(), data.getId());
+                File tempFileDir = new File(staticResourceDirectoryProperties.getVideoTempDirectory(), data.getId());
                 FileUtils.mkdir(tempFileDir);
 
                 File destFile = new File(tempFileDir, fileName);
