@@ -95,9 +95,12 @@ public class FFmpegUtils {
     }
 
     /**
-     * 按源分辨率筛选可产出的档位（3840×2160 → 848×480，源分辨率须不小于档位分辨率）
+     * 按源分辨率筛选可产出的档位（3840×2160 → 848×480）
+     * <p>
+     * 最低保底 1080p/720p/480p 三档：源分辨率不足（或探测不到）时照常产出，
+     * 升采样与黑边补足由模板里的 scale+pad 完成；4k/2k 仍要求源分辨率不小于档位，避免大幅升采样。
      *
-     * @return 从高到低的档位列表（master 播放列表按带宽降序），均不满足时返回空列表
+     * @return 从高到低的档位列表（master 播放列表按带宽降序），至少三档
      */
     public List<VideoVariant> getVideoResolutions(int maxWidth, int maxHeight) {
         VideoVariant[] all = {
@@ -108,9 +111,13 @@ public class FFmpegUtils {
                 new VideoVariant("v480p", 848, 480, 1200 * 1000)
         };
 
+        // 保底按 1080p 对待：源更小时 1080p/720p/480p 三档仍产出
+        int effectiveWidth = Math.max(maxWidth, 1920);
+        int effectiveHeight = Math.max(maxHeight, 1080);
+
         List<VideoVariant> result = new ArrayList<>();
         for (VideoVariant variant : all) {
-            if (variant.width() <= maxWidth && variant.height() <= maxHeight) {
+            if (variant.width() <= effectiveWidth && variant.height() <= effectiveHeight) {
                 result.add(variant);
             }
         }
