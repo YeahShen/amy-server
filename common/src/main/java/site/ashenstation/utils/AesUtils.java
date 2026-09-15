@@ -62,4 +62,9 @@ public class AesUtils {
 
         return cipher.doFinal(cipherText);
     }
+
+    public static void main(String[] args) throws NoSuchAlgorithmException {
+        String s = generateKey();
+        System.out.println(s);
+    }
 }

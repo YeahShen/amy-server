@@ -3,6 +3,7 @@ package site.ashenstation.modules.media.service;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import com.mybatisflex.core.query.QueryChain;
+import com.mybatisflex.core.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +17,7 @@ import site.ashenstation.model.entity.table.ArtistCategoryTableDef;
 import site.ashenstation.model.entity.table.ArtistTableDef;
 import site.ashenstation.modules.media.dto.ArtistDto;
 import site.ashenstation.modules.media.vo.ArtistByCategoryVo;
+import site.ashenstation.modules.media.vo.ArtistVo;
 
 import java.io.File;
 import java.io.IOException;
@@ -116,6 +118,19 @@ public class ArtistService {
             artist.setAvatar(staticResourceDirectoryProperties.getArtistAvatarPathPrefix() + "/" + artist.getAvatar());
         });
         return artists;
+    }
+
+
+    public ArtistVo getArtistInfo(Integer id) {
+
+        QueryWrapper wrapper = QueryWrapper.create()
+                .select(ArtistTableDef.ARTIST.ALL_COLUMNS, ArtistCategoryTableDef.ARTIST_CATEGORY.ALL_COLUMNS)
+                .from(ArtistTableDef.ARTIST.as("a")).where(ArtistTableDef.ARTIST.ID.eq(id))
+                .leftJoin(ArtistCategoryTableDef.ARTIST_CATEGORY).as("c").on(ArtistTableDef.ARTIST.CATEGORY_ID.eq(ArtistCategoryTableDef.ARTIST_CATEGORY.ID));
+
+        ArtistVo artistVo = artistMapper.selectOneByQueryAs(wrapper, ArtistVo.class);
+
+        return artistVo;
     }
 
 }

@@ -15,8 +15,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final StaticResourceDirectoryProperties staticResourceDirectoryProperties;
 
-//    http://localhost:9999/resource/video/795727cc1dc841659d75bb91145d42be/master.m3u8
-
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String userAvatarUtl = "file:" + staticResourceDirectoryProperties.getUserAvatarDirectory().replace("\\", "/") + "/";
@@ -35,4 +33,6 @@ public class WebConfig implements WebMvcConfigurer {
             resourceHandlerRegistration.addResourceLocations("file:" + resource.getPath().replace("\\", "/") + "/");
         });
     }
+
+
 }
