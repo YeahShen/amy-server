@@ -15,7 +15,6 @@ import java.util.Date;
 @Table("mda_artist")
 public class Artist {
     @Id(keyType = KeyType.Auto)
-    @ColumnAlias("artist_id")
     private Integer id;
     private String name;
     private String description;

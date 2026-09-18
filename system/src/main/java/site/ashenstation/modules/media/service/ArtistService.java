@@ -2,7 +2,6 @@ package site.ashenstation.modules.media.service;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
-import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,8 +20,11 @@ import site.ashenstation.modules.media.vo.ArtistVo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,18 +92,21 @@ public class ArtistService {
 
     public List<ArtistByCategoryVo> getArtistList() {
 
-        List<ArtistByCategoryVo> artistByCategoryVos = QueryChain.of(artistMapper)
-                .select(ArtistCategoryTableDef.ARTIST_CATEGORY.ALL_COLUMNS, ArtistTableDef.ARTIST.ALL_COLUMNS)
-                .from(ArtistCategoryTableDef.ARTIST_CATEGORY)
-                .leftJoin(ArtistTableDef.ARTIST).on(ArtistTableDef.ARTIST.CATEGORY_ID.eq(ArtistCategoryTableDef.ARTIST_CATEGORY.ID))
-                .listAs(ArtistByCategoryVo.class);
+        // 单表查询后在内存分组：多表 join 的嵌套映射依赖 <表名>$<列名> 这种自动别名，列重名时映射不上（Artist.id 曾因此恒为 null）
+        Map<Integer, List<Artist>> artistMap = artistMapper.selectAll().stream()
+                .filter(artist -> artist.getCategoryId() != null)
+                .collect(Collectors.groupingBy(Artist::getCategoryId));
 
-        artistByCategoryVos.forEach(artist -> {
-            artist.processAvatarUrl(staticResourceDirectoryProperties.getArtistAvatarPathPrefix());
-        });
-
-
-        return artistByCategoryVos;
+        return artistCategoryMapper.selectAll().stream()
+                .map(category -> {
+                    ArtistByCategoryVo vo = new ArtistByCategoryVo();
+                    vo.setId(category.getId().toString());
+                    vo.setTitle(category.getTitle());
+                    vo.setList(artistMap.getOrDefault(category.getId(), new ArrayList<>()));
+                    vo.processAvatarUrl(staticResourceDirectoryProperties.getArtistAvatarPathPrefix());
+                    return vo;
+                })
+                .toList();
     }
 
 

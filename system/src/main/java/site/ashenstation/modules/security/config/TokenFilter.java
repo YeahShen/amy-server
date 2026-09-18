@@ -41,7 +41,8 @@ public class TokenFilter extends GenericFilterBean {
             boolean tokenExpired = tokenProvider.isTokenExpired(token);
 
             if (tokenExpired) {
-                throw new BadRequestException("token expired");
+                throw
+                        new BadRequestException("token expired");
             }
 
             Claims claims = tokenProvider.getClaims(token);
