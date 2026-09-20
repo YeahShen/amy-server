@@ -31,7 +31,7 @@ public class StaticResourceEncryptFilter implements Filter {
 
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(httpResponse);
 
-        if (!uri.endsWith(".tsxxxx")) {
+        if (!uri.endsWith(".ts")) {
             chain.doFilter(request, httpResponse);
             return;
         } else {
@@ -51,6 +51,7 @@ public class StaticResourceEncryptFilter implements Filter {
             if (originalBody.length > 0) {
                 try {
                     byte[] encryptedBody = AesUtils.encrypt(originalBody, aesEncryptKey);
+
                     responseWrapper.resetBuffer();
                     responseWrapper.getOutputStream().write(encryptedBody);
                     responseWrapper.setContentLength(encryptedBody.length);

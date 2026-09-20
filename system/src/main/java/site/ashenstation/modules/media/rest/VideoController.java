@@ -12,6 +12,7 @@ import site.ashenstation.model.entity.VideoType;
 import site.ashenstation.modules.media.dto.CreateVideoDto;
 import site.ashenstation.modules.media.service.VideoService;
 import site.ashenstation.modules.security.vo.ArtistVideosVo;
+import site.ashenstation.modules.security.vo.PlayVideoVo;
 
 import java.util.List;
 
@@ -48,4 +49,10 @@ public class VideoController {
     public ResponseEntity<ArtistVideosVo> getVideoListByArtistId(Integer id) {
         return ResponseEntity.ok(videoService.getVideoListByArtistId(id));
     }
+
+    @GetMapping("get-video-info")
+    public ResponseEntity<PlayVideoVo> getVideoPlayingById(String id) {
+        return ResponseEntity.ok(videoService.getVideoPlayInfoById(id));
+    }
+
 }

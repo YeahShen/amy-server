@@ -11,6 +11,7 @@ import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.ashenstation.enums.UploadTaskType;
@@ -20,6 +21,7 @@ import site.ashenstation.infrastructure.dao.*;
 import site.ashenstation.infrastructure.property.FFmpegProperties;
 import site.ashenstation.infrastructure.property.StaticResourceDirectoryProperties;
 import site.ashenstation.model.entity.*;
+import site.ashenstation.model.entity.table.ResourceAesEncryptTableDef;
 import site.ashenstation.model.entity.table.VideoArtistMapTableDef;
 import site.ashenstation.model.entity.table.VideoTableDef;
 import site.ashenstation.model.entity.table.VideoTypeTableDef;
@@ -29,6 +31,7 @@ import site.ashenstation.modules.media.dto.UploadTaskDto;
 import site.ashenstation.modules.security.service.SseService;
 import site.ashenstation.modules.security.vo.ArtistVideosVo;
 import site.ashenstation.modules.security.vo.NotificationVO;
+import site.ashenstation.modules.security.vo.PlayVideoVo;
 import site.ashenstation.utils.*;
 
 import java.io.File;
@@ -261,6 +264,12 @@ public class VideoService {
             channel.basicAck(1L, false);
             ResourceAesEncrypt resourceAesEncrypt = new ResourceAesEncrypt();
 
+            resourceAesEncrypt.setEncryptKey(key);
+            resourceAesEncrypt.setResourceId(dto.getId());
+            resourceAesEncrypt.setCreateAt(new Date());
+
+            resourceAesEncryptMapper.insert(resourceAesEncrypt);
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -341,5 +350,21 @@ public class VideoService {
         });
 
         return artistVideosVo;
+    }
+
+    public PlayVideoVo getVideoPlayInfoById(String id) {
+        Video video = videoMapper.selectOneById(id);
+        PlayVideoVo playVideoVo = new PlayVideoVo();
+
+        ResourceAesEncrypt resourceAesEncrypt = resourceAesEncryptMapper.selectOneByCondition(ResourceAesEncryptTableDef.RESOURCE_AES_ENCRYPT.RESOURCE_ID.eq(id));
+
+        assert video != null;
+        BeanUtils.copyProperties(video, playVideoVo);
+
+        playVideoVo.setPlayUrl(staticResourceDirectoryProperties.getVideoResourcePrefix() + "/" + video.getParentFolderName() + "/" + "master.m3u8");
+        assert resourceAesEncrypt != null;
+        playVideoVo.setDecryptKey(resourceAesEncrypt.getEncryptKey());
+
+        return playVideoVo;
     }
 }
