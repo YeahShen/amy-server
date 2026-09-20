@@ -11,6 +11,7 @@ import site.ashenstation.model.entity.VideoTag;
 import site.ashenstation.model.entity.VideoType;
 import site.ashenstation.modules.media.dto.CreateVideoDto;
 import site.ashenstation.modules.media.service.VideoService;
+import site.ashenstation.modules.security.vo.ArtistVideosVo;
 
 import java.util.List;
 
@@ -41,5 +42,10 @@ public class VideoController {
     @PostMapping("createUploadTask")
     public ResponseEntity<String> createVideoUploadTask(CreateVideoDto dto) {
         return ResponseEntity.ok(videoService.createVideoUploadTask(dto));
+    }
+
+    @GetMapping("get-artiest-videos")
+    public ResponseEntity<ArtistVideosVo> getVideoListByArtistId(Integer id) {
+        return ResponseEntity.ok(videoService.getVideoListByArtistId(id));
     }
 }

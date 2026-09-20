@@ -2,6 +2,7 @@ package site.ashenstation.modules.media.service;
 
 import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.util.UpdateEntity;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +20,14 @@ import site.ashenstation.infrastructure.dao.*;
 import site.ashenstation.infrastructure.property.FFmpegProperties;
 import site.ashenstation.infrastructure.property.StaticResourceDirectoryProperties;
 import site.ashenstation.model.entity.*;
+import site.ashenstation.model.entity.table.VideoArtistMapTableDef;
+import site.ashenstation.model.entity.table.VideoTableDef;
+import site.ashenstation.model.entity.table.VideoTypeTableDef;
 import site.ashenstation.modules.media.dto.CreateVideoDto;
 import site.ashenstation.modules.media.dto.UploadProcessorKeyDto;
 import site.ashenstation.modules.media.dto.UploadTaskDto;
 import site.ashenstation.modules.security.service.SseService;
+import site.ashenstation.modules.security.vo.ArtistVideosVo;
 import site.ashenstation.modules.security.vo.NotificationVO;
 import site.ashenstation.utils.*;
 
@@ -315,5 +320,26 @@ public class VideoService {
                 .findFirst()
                 .map(StaticResourceDirectoryProperties.VideoRootProperties::getPath)
                 .orElseThrow(() -> new IllegalStateException("未找到启用的视频根目录: " + enable));
+    }
+
+
+    public ArtistVideosVo getVideoListByArtistId(Integer artistId) {
+        VideoArtistMapTableDef videoArtistMap = VideoArtistMapTableDef.VIDEO_ARTIST_MAP;
+        VideoTableDef videoTable = VideoTableDef.VIDEO;
+
+        QueryWrapper wrapper = QueryWrapper.create()
+                .select(videoArtistMap.ARTIST_ID, videoArtistMap.VIDEO_ID, videoTable.ALL_COLUMNS, videoTable.TYPE, VideoTypeTableDef.VIDEO_TYPE.ID, VideoTypeTableDef.VIDEO_TYPE.TITLE.as("type_title"))
+                .from(videoArtistMap.as("a")).where(videoArtistMap.ARTIST_ID.eq(artistId))
+                .leftJoin(videoTable.as("v")).on(videoTable.ID.eq(videoArtistMap.VIDEO_ID))
+                .leftJoin(VideoTypeTableDef.VIDEO_TYPE.as("t")).on(videoTable.TYPE.eq(VideoTypeTableDef.VIDEO_TYPE.ID));
+
+        ArtistVideosVo artistVideosVo = videoArtistMapMapper.selectOneByQueryAs(wrapper, ArtistVideosVo.class);
+
+        artistVideosVo.getVideoList().forEach(video -> {
+            String posterName = video.getPosterName();
+            video.setPosterUrl(staticResourceDirectoryProperties.getPosterPathPrefix() + "/" + posterName);
+        });
+
+        return artistVideosVo;
     }
 }
