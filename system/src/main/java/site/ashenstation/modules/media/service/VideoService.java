@@ -147,7 +147,12 @@ public class VideoService {
 
             tempFile.renameTo(destFile);
 
-            Long duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
+            Long duration = 0L;
+
+            try {
+                duration = fFmpegUtils.getDuration(destFile.getAbsolutePath());
+            } catch (Exception ignored) {
+            }
 
             saveVideoInformation(dto, duration);
 
