@@ -7,7 +7,6 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import site.ashenstation.enums.LoginPlatform;
+import site.ashenstation.exception.BadRequestException;
 import site.ashenstation.modules.security.dto.OnlineUserDto;
 import site.ashenstation.modules.security.service.OnlineUserService;
 import site.ashenstation.utils.Constants;
@@ -41,8 +41,7 @@ public class TokenFilter extends GenericFilterBean {
             boolean tokenExpired = tokenProvider.isTokenExpired(token);
 
             if (tokenExpired) {
-                throw
-                        new BadRequestException("token expired");
+                throw new BadRequestException("token expired");
             }
 
             Claims claims = tokenProvider.getClaims(token);
