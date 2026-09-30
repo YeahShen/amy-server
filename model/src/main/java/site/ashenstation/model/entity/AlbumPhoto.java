@@ -1,5 +1,8 @@
 package site.ashenstation.model.entity;
 
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.ToString;
 
@@ -7,6 +10,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
+@Table("mda_album_photo")
 @Data
 @ToString
 public class AlbumPhoto implements Serializable {
@@ -14,8 +18,9 @@ public class AlbumPhoto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 照片ID
+     * 照片ID (主键, 自增)
      */
+    @Id(keyType = KeyType.Auto)
     private Long id;
 
     /**

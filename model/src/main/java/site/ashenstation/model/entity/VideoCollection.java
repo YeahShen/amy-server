@@ -1,17 +1,21 @@
 package site.ashenstation.model.entity;
 
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.ToString;
 
 import java.util.Date;
 
+@Table("mda_video_collection")
 @Data
 @ToString
 public class VideoCollection {
 
     /**
-     * 合集ID (主键, varchar(255))
+     * 合集ID (主键, varchar(255)，非自增，由应用生成)
      */
+    @Id
     private String id;
 
     /**

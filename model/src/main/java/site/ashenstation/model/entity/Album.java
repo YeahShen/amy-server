@@ -1,11 +1,14 @@
 package site.ashenstation.model.entity;
 
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
 
+@Table("mda_album")
 @Data
 @ToString
 public class Album implements Serializable {
@@ -13,8 +16,9 @@ public class Album implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 相册ID (主键, varchar(99))
+     * 相册ID (主键, varchar(99)，非自增，由应用生成)
      */
+    @Id
     private String id;
 
     /**

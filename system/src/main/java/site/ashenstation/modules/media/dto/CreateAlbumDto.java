@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @ToString
-public class createAlbumDto {
+public class CreateAlbumDto {
     private String name;
     private String description;
     private String artistId;
