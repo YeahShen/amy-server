@@ -27,14 +27,14 @@ public class AlbumService {
     public void createAlbum(CreateAlbumDto dto) {
 
         if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new BadRequestException("Album name can not be null");
+            throw new BadRequestException("相册名不能为空");
         }
 
         Long artistId;
         try {
             artistId = Long.parseLong(dto.getArtistId());
         } catch (NumberFormatException | NullPointerException e) {
-            throw new BadRequestException("artistId is invalid");
+            throw new BadRequestException("艺术家ID不合法");
         }
 
         // 同一艺术家下相册名不可重复，仅校验正常状态（已删除的相册不占用名称）
@@ -43,7 +43,7 @@ public class AlbumService {
                 .and(AlbumTableDef.ALBUM.STATUS.eq(1)));
 
         if (exists != null) {
-            throw new BadRequestException("Album already exists");
+            throw new BadRequestException("该艺术家下已存在同名相册");
         }
 
         Album album = new Album();
