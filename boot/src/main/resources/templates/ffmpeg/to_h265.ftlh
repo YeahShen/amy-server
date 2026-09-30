@@ -1,1 +1,1 @@
--c:v ${videoEncoder} -c:a copy
+-c:v ${videoEncoder} -c:a aac -b:a 128k
