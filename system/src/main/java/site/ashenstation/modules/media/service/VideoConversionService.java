@@ -2,6 +2,7 @@ package site.ashenstation.modules.media.service;
 
 import lombok.RequiredArgsConstructor;
 import net.bramp.ffmpeg.FFmpegExecutor;
+import net.bramp.ffmpeg.progress.ProgressListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import site.ashenstation.utils.FFmpegUtils;
@@ -24,8 +25,8 @@ public class VideoConversionService {
      * @return 目标路径
      */
     @Async("AmyTaskExecutor")
-    public CompletableFuture<String> convertVideo(FFmpegExecutor fFmpegExecutor, String source, String target, String cmd) {
-        fFmpegUtils.conversion(source, target, cmd, fFmpegExecutor);
+    public CompletableFuture<String> convertVideo(FFmpegExecutor fFmpegExecutor, String source, String target, String cmd, ProgressListener progressListener) {
+        fFmpegUtils.conversion(source, target, cmd, fFmpegExecutor, progressListener);
         return CompletableFuture.completedFuture(target);
     }
 }

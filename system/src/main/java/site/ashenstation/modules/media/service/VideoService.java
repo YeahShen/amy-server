@@ -195,9 +195,6 @@ public class VideoService {
 
             videoFile = tsFile;
 
-
-            System.out.println("encodingFormat: " + encodingFormat);
-
             FFmpegUtils.VideoResolution videoResolution = fFmpegUtils.getVideoResolution(videoFile.getAbsolutePath());
 
             List<FFmpegUtils.VideoVariant> videoResolutions = fFmpegUtils.getVideoResolutions(videoResolution.width(), videoResolution.height());
@@ -220,7 +217,13 @@ public class VideoService {
                 }});
 
                 new File(root, label).mkdir();
-                completableFutures.add(videoConversionService.convertVideo(rootExecutor, videoFile.getAbsolutePath(), label + "/index.m3u8", cmd));
+
+                completableFutures.add(videoConversionService.convertVideo(rootExecutor, videoFile.getAbsolutePath(), label + "/index.m3u8", cmd, new ProgressListener() {
+                    @Override
+                    public void progress(Progress progress) {
+                        double percentage = progress.out_time_ns / duration_ns;
+                    }
+                }));
             }
 
             CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0])).join();
@@ -258,7 +261,10 @@ public class VideoService {
 
             videoMapper.update(video);
 
-            FileUtils.del(destFile.getAbsolutePath());
+            // 删除临时文件
+            FileUtils.del(new File(staticResourceDirectoryProperties.getVideoTempDirectory(), dto.getId()));
+            FileUtils.del(new File(staticResourceDirectoryProperties.getUploadTempDirectory(), dto.getId()));
+
 
             sseService.SendMessage(userId, new NotificationVO("reloadArtistVideo", new HashMap<>() {{
                 put("artist", dto.getId());
@@ -274,7 +280,6 @@ public class VideoService {
             resourceAesEncrypt.setCreateAt(new Date());
 
             resourceAesEncryptMapper.insert(resourceAesEncrypt);
-
 
         } catch (Exception e) {
             e.printStackTrace();
