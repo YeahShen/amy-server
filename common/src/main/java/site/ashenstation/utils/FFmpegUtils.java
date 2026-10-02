@@ -85,7 +85,7 @@ public class FFmpegUtils {
                 return new VideoResolution(stream.width, stream.height);
             }
         }
-        return null;
+        return new VideoResolution(1920, 1080);
     }
 
     /**
